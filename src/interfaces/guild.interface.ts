@@ -52,6 +52,21 @@ export interface TicketMessage {
   embed: Embed
 }
 
+export interface TicketSetting {
+  _id: mongoTypes.ObjectId;
+  categories: string;
+  guildId: string;
+  published_date: Date;
+}
+
+export interface CustomLinkSetting {
+  guild_id: string;
+  path: string;
+  useage: Number
+  type: "custom" | "random"
+  published_date: Date;
+}
+
 
 
 export type voteStatus = 'open' | 'close'

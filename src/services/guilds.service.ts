@@ -7,6 +7,7 @@ import {
   Message,
   ActionRowBuilder,
   User,
+  ButtonComponent
 } from "discord.js";
 import { RequestWithGuild } from "@/interfaces/guild.interface";
 import { HttpException } from "@/exceptions/HttpException";
@@ -15,6 +16,9 @@ import randomstring from "randomstring";
 import votesModel from "@/models/vote.model";
 import warningModel from "@/models/warning.model";
 import ticketModel from "@/models/ticket.model";
+import ticketSettingModel from "@/models/ticketSetting.model";
+import { ResponseObj } from "@/interfaces/routes.interface";
+import customLinkSettingModel from "@/models/customLinkSetting.model";
 
 class GuildsService {
   public getGuildData(req: RequestWithGuild): any {
@@ -42,13 +46,65 @@ class GuildsService {
     return users;
   }
 
-  public async setGuildCustomLink(req: RequestWithGuild): Promise<string> {
-    const users: User[] = [];
-    await req.guild.members.fetch();
-    req.guild.members.cache.forEach((member) => {
-      users.push(member.user);
-    });
-    return 'ads';
+  public async setGuildCustomLink(req: RequestWithGuild): Promise<ResponseObj> {
+    if(req.body.type === "custom") {
+      if(!req.isPremium) throw new HttpException(400, "커스텀 링크 기능은 프리미엄 전용 기능입니다")
+      if(!req.body.path) throw new HttpException(400, "사용할 커스텀 링크를 입력해주세요")
+      const isUseing = await customLinkSettingModel.findOne({ path: req.body.path });
+      if(isUseing && isUseing.guild_id !== req.guild.id) throw new HttpException(400, "이미 사용 중인 커스텀 링크입니다")
+      const customlinkDB = await customLinkSettingModel.findOne({guild_id: req.guild.id, type: "custom"});
+      if(!customlinkDB) {
+        const customLinkSetting = new customLinkSettingModel()
+        customLinkSetting.guild_id = req.guild.id;
+        customLinkSetting.path = req.body.path;
+        customLinkSetting.type = "custom";
+        await customLinkSetting.save().catch(e => {
+          if(e) throw new HttpException(500, "커스텀 링크 설정 중 오류가 발생했습니다")
+        })
+        return { message: `${req.body.path}로 서버 커스텀 링크를 설정했습니다` }
+      } else {
+        await customlinkDB.updateOne({ $set: { path: req.body.path } });
+        return { message: `${req.body.path}로 서버 커스텀 링크를 설정했습니다` }
+      }
+    }
+    if(req.body.type === "random") {
+      return {message: "", data: ""}
+    }
+  }
+
+  public async createTicket(req: RequestWithGuild): Promise<string> {
+    const channel = req.guild.channels.cache.get(req.body.channel)
+    const categori = req.guild.channels.cache.get(req.body.categori)
+    if(!channel || channel.type !== ChannelType.GuildText) throw new HttpException(404, '티켓을 생성할 채널을 찾을 수 없습니다.')
+    if(!categori || categori.type !== ChannelType.GuildCategory) throw new HttpException(404, '티켓을 생성할 카테고리를 찾을 수 없습니다.')
+    const ticketDB = await ticketSettingModel.findOne({guildId: req.guild.id})
+    const embed = new EmbedBuilder()
+      .setTitle(req.body.title)
+      .setDescription(req.body.description)
+      .setColor(req.body.color ? req.body.color : '#2f3136')
+    const button = new ButtonBuilder()
+      .setLabel(req.body.button ? req.body.button : "티켓 생성하기")
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji(req.body.emoji ? req.body.emoji : '🎫')
+      .setCustomId('create')
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(button)
+    if(ticketDB) {
+      await ticketSettingModel.updateOne({guildId: req.guild.id}, {$set: {categories: categori.id}})
+      await channel.send({embeds: [embed], components: [row]})
+      return `티켓 생성 카테고리를 #${categori.name}(으)로 변경하고 #${channel.name} 채널에 티켓을 생성했습니다` 
+    } else {
+      const ticketSettingDB = new ticketSettingModel()
+      ticketSettingDB.guildId = req.guild.id
+      ticketSettingDB.categories = categori.id
+      const ticketSettingResult = await ticketSettingDB.save().then((data) => {
+        return `티켓 생성 카테고리를 #${categori.name}(으)로 설정하고 #${channel.name} 채널에 티켓을 생성했습니다` 
+      })
+      .catch((e) => {
+        if(e) return `티켓 설정을 저장하는 도중 오류가 발생했습니다` 
+      })
+      return ticketSettingResult;
+    }
   }
 
   public async getGuildMember(req: RequestWithGuild): Promise<any> {

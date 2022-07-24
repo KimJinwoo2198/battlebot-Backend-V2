@@ -1,5 +1,6 @@
 import { Error } from '@/interfaces/error.interface';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ContainsEmoji } from '@/utils/customValidation';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsHexColor, IsIn, IsOptional, IsString, Validate, ValidateNested } from 'class-validator';
 
 export class Vote {
     @IsArray({message: "투표 향목은 Array 형식이여야 합니다", context: { errorCode: Error.IS_NOT_ARRAY }})
@@ -28,4 +29,29 @@ export class CustomLink {
   @IsOptional()
   @IsString({message: "커스텀 링크는 문자만 입력가능합니다", context: { errorCode: Error.IS_NOT_STRING }})
   public path?: string
+}
+
+export class Ticket {
+  @IsString({message: "티켓 채널을 선택해주세요", context: { errorCode: Error.IS_NOT_SELECT_CHANNEL }})
+  public channel: string;
+
+  @IsString({message: "티켓이 생성될 카테고리를 선택해주세요", context: { errorCode: Error.IS_NOT_SELECT_CHANNEL }})
+  public categori: string;
+  @IsString({message: "티켓의 제목을 입력해주세요", context: { errorCode: Error.IS_NOT_TITLE }})
+  public title: string;
+
+  @IsString({message: "티켓의 설명을 입력해주세요", context: { errorCode: Error.IS_NOT_DESCRIPTION }})
+  public description: string;
+
+  @IsHexColor({message: "임베드의 올바른 색상을 선택해 주세요"})
+  @IsOptional()
+  public color: string;
+
+  @Validate(ContainsEmoji, {message: "임베드의 올바른 이모지를 선택해 주세요"})
+  @IsOptional()
+  public emoji: string;
+
+  @IsString({message: "버튼의 올바른 텍스트를 입력해 주세요"})
+  @IsOptional()
+  public button: string;
 }

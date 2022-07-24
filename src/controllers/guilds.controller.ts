@@ -35,11 +35,21 @@ class GuildController {
   public setCustomLink = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
     try {
       const customlink = await this.guildsService.setGuildCustomLink(req)
-      ResponseWrapper(req, res, {message: customlink})
+      ResponseWrapper(req, res, customlink)
     } catch (error) {
       next(error);
     }
   };
+
+  public createTicket = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const createTicket = await this.guildsService.createTicket(req)
+      ResponseWrapper(req, res, {message: createTicket})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public addGuildMemberWarning = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
     try {
       const memberWarning = await this.guildsService.addGuildMemberWarning(req)
