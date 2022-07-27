@@ -17,5 +17,8 @@ export const {
   CLIENT_SECRET,
   REDIRECT_URL,
   COOKIE_DOMAIN,
+  DB_PASSWORD,
+  DB_USER,
+
   FRONT_REDIRECT_URL,
 } = process.env;
