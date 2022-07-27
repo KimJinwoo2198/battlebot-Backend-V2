@@ -17,10 +17,11 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       const secretKey: string = SECRET_KEY;
       const verificationResponse = (await verify(Authorization, secretKey)) as DataStoredInToken;
       const userId = verificationResponse.id;
+      const user = client.users.cache.get(userId)
       const findUser = await userModel.findOne({ id: userId });
 
       if (findUser) {
-        req.user = findUser;
+        req.user = {...findUser.toJSON(), user: user ? user : await client.users.fetch(userId)};
         next();
       } else {
         next(new HttpException(401, '올바르지 않은 유저 토큰입니다'));
@@ -41,10 +42,11 @@ const authAdminMiddleware = async (req: RequestWithGuild, res: Response, next: N
       const secretKey: string = SECRET_KEY;
       const verificationResponse = (await verify(Authorization, secretKey)) as DataStoredInToken;
       const userId = verificationResponse.id;
+      const user = client.users.cache.get(userId)
       const findUser = await userModel.findOne({ id: userId });
 
       if (findUser) {
-        req.user = findUser;
+        req.user = {...findUser.toJSON(), user: user ? user : await client.users.fetch(userId)};
         const guild = client.guilds.cache.get(req.params.id)
         if(guild) {
           const premium = await premiumGuildModel.findOne({guild_id: guild.id})

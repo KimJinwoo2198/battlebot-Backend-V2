@@ -1,3 +1,5 @@
+import { User as DiscordUser } from "discord.js"
+
 export interface User {
   discordAccessToken: any;
   _id: string;
@@ -18,6 +20,7 @@ export interface User {
   expires_in: number;
   published_date: Date;
   minecraft_id?: string;
+  user: DiscordUser
 }
 
 export enum BattlebotUserFlags {
