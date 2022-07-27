@@ -20,7 +20,7 @@
       output: './logs/access.log', // pm2 log file
       error: './logs/error.log', // pm2 error log file
       env: { // environment variable
-        PORT: 3000,
+        PORT: 3001,
         NODE_ENV: 'production',
       },
     },
@@ -39,19 +39,19 @@
       output: './logs/access.log', // pm2 log file
       error: './logs/error.log', // pm2 error log file
       env: { // environment variable
-        PORT: 3000,
+        PORT: 3001,
         NODE_ENV: 'development',
       },
     },
   ],
   deploy: {
     production: {
-      user: 'user',
+      user: 'root',
       host: '0.0.0.0',
-      ref: 'origin/master',
-      repo: 'git@github.com:repo.git',
+      ref: 'origin/main',
+      repo: 'git@github.com:Archive-Discord/battlebot-Backend-V2.git',
       path: 'dist/server.js',
-      'post-deploy': 'npm install && npm run build && pm2 reload ecosystem.config.js --only prod',
+      'post-deploy': 'yarn && yarn build && pm2 reload ecosystem.config.js --only prod',
     },
   },
 };

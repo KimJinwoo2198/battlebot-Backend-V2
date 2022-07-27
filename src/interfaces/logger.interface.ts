@@ -13,6 +13,6 @@ export interface Log {
 }
 
 export interface RequestHandler extends Request {
-  requestId: string;
+  requestId?: string;
 }
 
