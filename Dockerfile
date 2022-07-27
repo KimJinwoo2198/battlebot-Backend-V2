@@ -5,10 +5,10 @@ COPY . ./app
 
 WORKDIR /app
 
-RUN npm install
+RUN yarn
 
-EXPOSE 3000
+EXPOSE 3001
 
 ENV NODE_ENV production
 
-CMD ["npm", "run", "start"]
+CMD ["yarn", "start"]
