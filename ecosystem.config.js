@@ -1,9 +1,16 @@
+const dotenv = require('dotenv');
+const path = require('path');
+
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+
 /**
  * @description pm2 configuration file.
  * @example
  *  production mode :: pm2 start ecosystem.config.js --only prod
  *  development mode :: pm2 start ecosystem.config.js --only dev
  */
+
  module.exports = {
   apps: [
     {
@@ -46,8 +53,8 @@
   ],
   deploy: {
     production: {
-      user: 'root',
-      host: '0.0.0.0',
+      user: process.env.DEPLOY_USER,
+      host: process.env.DEPLOY_HOST,
       ref: 'origin/main',
       repo: 'git@github.com:Archive-Discord/battlebot-Backend-V2.git',
       path: 'dist/server.js',
