@@ -1,3 +1,4 @@
+import { RESTAPIPartialCurrentUserGuild, RESTGetAPICurrentUserGuildsResult } from "discord-api-types/v10";
 import { User as DiscordUser } from "discord.js"
 
 export interface User {
@@ -27,3 +28,9 @@ export enum BattlebotUserFlags {
 	general = 0 << 0,
 	admin = 1 << 10
 }
+
+export interface UserGuld extends RESTAPIPartialCurrentUserGuild {
+  bot: boolean;
+}
+
+export type UserGulds = UserGuld[]

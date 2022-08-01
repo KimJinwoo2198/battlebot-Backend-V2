@@ -29,6 +29,15 @@ class AuthController {
     }
   };
 
+  public meGuilds = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const guilds = await this.authService.getUserGuilds(req);
+      ResponseWrapper(req, res, {data: guilds})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public logInUrl = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const redirect = req.query.redirect;

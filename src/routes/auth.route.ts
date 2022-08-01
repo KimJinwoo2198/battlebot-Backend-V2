@@ -17,6 +17,7 @@ class AuthRoute implements Routes {
   private initializeRoutes() {
     this.router.get(`${this.path}/discord/callback`, this.authController.logIn);
     this.router.get(`${this.path}/me`, authMiddleware, this.authController.me);
+    this.router.get(`${this.path}/me/guilds`, authMiddleware, this.authController.meGuilds);
     this.router.get(`${this.path}/discord`, this.authController.logInUrl);
     this.router.get(`${this.path}/logout`,authMiddleware, this.authController.logOut);
   }
