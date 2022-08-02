@@ -73,10 +73,10 @@ const authAdminMiddleware = async (req: RequestWithGuild, res: Response, next: N
                 req.isAdmin = true;
                 next(); 
               } else {
-                next(new HttpException(401, '해당 서버를 관리할 권한이 없습니다'));
+                next(new HttpException(403, '해당 서버를 관리할 권한이 없습니다'));
               }
             } else {
-              next(new HttpException(404, '해당 서버에서 관리자를 찾지 못했습니다. 서버에서 채팅 입력후 다시 시도해주세요.'));    
+              next(new HttpException(403, '해당 서버에서 관리자를 찾지 못했습니다. 서버에서 채팅 입력후 다시 시도해주세요.'));    
             }
           }
         } else {

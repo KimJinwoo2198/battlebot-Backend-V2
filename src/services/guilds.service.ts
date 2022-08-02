@@ -32,7 +32,7 @@ class GuildsService {
       categories: req.guild.channels.cache.filter(
         (categori) => categori.type == ChannelType.GuildCategory
       ),
-      icon: req.guild.iconURL(),
+      icon: req.guild.icon,
       roles: req.guild.roles.cache,
     };
   }
