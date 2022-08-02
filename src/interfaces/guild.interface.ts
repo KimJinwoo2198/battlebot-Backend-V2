@@ -26,6 +26,14 @@ export interface Vote {
   status: voteStatus
 }
 
+export interface Verify {
+  guild_id: String,
+  user_id: String,
+  token: String,
+  status: String,
+  published_date: Date
+}
+
 export interface Warning {
   _id: string;
   userId: string;

@@ -19,9 +19,10 @@ import ticketModel from "@/models/ticket.model";
 import ticketSettingModel from "@/models/ticketSetting.model";
 import { ResponseObj } from "@/interfaces/routes.interface";
 import customLinkSettingModel from "@/models/customLinkSetting.model";
+import verifyModel from "@/models/verify.model";
 
 class GuildsService {
-  public getGuildData(req: RequestWithGuild): any {
+  public async getGuildData(req: RequestWithGuild): Promise<any> {
     return {
       id: req.guild.id,
       name: req.guild.name,
@@ -34,6 +35,8 @@ class GuildsService {
       ),
       icon: req.guild.icon,
       roles: req.guild.roles.cache,
+      tickets: (await ticketModel.find({guild_id: req.guild.id})).length,
+      verifys: (await verifyModel.find({guild_id: req.guild.id, status: "success"})).length,
     };
   }
 

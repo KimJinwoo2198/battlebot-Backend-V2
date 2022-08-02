@@ -8,7 +8,7 @@ class GuildController {
 
   public getGuild = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
     try {
-      ResponseWrapper(req, res, {data: this.guildsService.getGuildData(req)})
+      ResponseWrapper(req, res, {data: await this.guildsService.getGuildData(req)})
     } catch (error) {
       next(error);
     }
