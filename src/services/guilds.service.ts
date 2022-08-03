@@ -7,7 +7,8 @@ import {
   Message,
   ActionRowBuilder,
   User,
-  ButtonComponent
+  ButtonComponent,
+  GuildMember
 } from "discord.js";
 import { RequestWithGuild } from "@/interfaces/guild.interface";
 import { HttpException } from "@/exceptions/HttpException";
@@ -41,10 +42,14 @@ class GuildsService {
   }
 
   public async getGuildMembers(req: RequestWithGuild): Promise<User[]> {
-    const users: User[] = [];
+    const users: any[] = [];
     await req.guild.members.fetch();
     req.guild.members.cache.forEach((member) => {
-      users.push(member.user);
+      users.push({
+        roles: member.roles.cache,
+        joinedTimestamp: member.joinedTimestamp,
+        user: member.user,
+      });
     });
     return users;
   }
