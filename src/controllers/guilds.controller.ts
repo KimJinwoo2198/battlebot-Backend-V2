@@ -59,6 +59,15 @@ class GuildController {
     }
   };
 
+  public guildVerifyPhone = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const memberVerify = await this.guildsService.verifyPhone(req)
+      ResponseWrapper(req, res, {data: memberVerify})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public guildVote = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
     try {
       const voteSettingResult = await this.guildsService.voteData(req)

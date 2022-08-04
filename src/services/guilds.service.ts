@@ -21,6 +21,9 @@ import ticketSettingModel from "@/models/ticketSetting.model";
 import { ResponseObj } from "@/interfaces/routes.interface";
 import customLinkSettingModel from "@/models/customLinkSetting.model";
 import verifyModel from "@/models/verify.model";
+import sendMessage from "@/utils/message";
+import { KAKAO_MESSAGE_TEMPLATE } from "@/interfaces/message.interface";
+import { client } from "@/utils/discord";
 
 class GuildsService {
   public async getGuildData(req: RequestWithGuild): Promise<any> {
@@ -163,6 +166,20 @@ class GuildsService {
         throw new HttpException(500, "경고 추가 도중 오류가 발생했습니다");
       });
     return saveData;
+  }
+
+  public async verifyPhone(req: RequestWithGuild): Promise<string> {
+    if(!req.isPremium) throw new HttpException(403, "해당 기능은 프리미엄 전용 기능입니다")
+    const user = await client.users.fetch(req.body.userId)
+    if(!user) throw new HttpException(404, "인증을 진행하는 유저를 찾을 수 없습니다")
+    try {
+      await sendMessage(req.body.phoneNumber, KAKAO_MESSAGE_TEMPLATE.PREMIUM_SUCCESS, {
+        "#{이름}": user.username
+      })
+    } catch(e) {
+      throw new HttpException(500, "인증번호 발송에 실패하였습니다.")
+    }
+    return 
   }
 
   public async voteData(req: RequestWithGuild): Promise<string> {
