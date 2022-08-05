@@ -27,3 +27,11 @@ export function checkUserFlag(base: number, required: number | keyof typeof Batt
 function checkFlag(base: number, required: number) {
 	return (base & required) === required
 }
+
+export function generateRandomNumber(n: number) {
+  let str = ''
+  for (let i = 0; i < n; i++) {
+    str += Math.floor(Math.random() * 10)
+  }
+  return str
+}

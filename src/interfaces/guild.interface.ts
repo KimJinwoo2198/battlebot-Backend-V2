@@ -34,6 +34,16 @@ export interface Verify {
   published_date: Date
 }
 
+export interface VerifyPhone {
+  guild_id: String,
+  user_id: String,
+  token: String,
+  status: String,
+  phoneNumber: String,
+  verfiyKey: String,
+  published_date: Date
+}
+
 export interface Warning {
   _id: string;
   userId: string;

@@ -149,9 +149,11 @@ const authBotMiddleware = async (
       if (BOT_TOKEN === Authorization) {
         const guild = client.guilds.cache.get(req.params.id);
         if (guild) {
+          console.log(guild)
           const premium = await premiumGuildModel.findOne({
             guild_id: guild.id,
           });
+          console.log(premium)
           if (!premium) {
             req.isPremium = false;
           } else {

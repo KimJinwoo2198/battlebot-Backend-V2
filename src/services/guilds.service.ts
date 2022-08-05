@@ -6,9 +6,7 @@ import {
   EmbedBuilder,
   Message,
   ActionRowBuilder,
-  User,
-  ButtonComponent,
-  GuildMember
+  User
 } from "discord.js";
 import { RequestWithGuild } from "@/interfaces/guild.interface";
 import { HttpException } from "@/exceptions/HttpException";
@@ -23,7 +21,8 @@ import customLinkSettingModel from "@/models/customLinkSetting.model";
 import verifyModel from "@/models/verify.model";
 import sendMessage from "@/utils/message";
 import { KAKAO_MESSAGE_TEMPLATE } from "@/interfaces/message.interface";
-import { client } from "@/utils/discord";
+import { generateRandomNumber } from "@/utils/util";
+import verifyPhoneModel from "@/models/verifyPhone.model";
 
 class GuildsService {
   public async getGuildData(req: RequestWithGuild): Promise<any> {
@@ -168,18 +167,35 @@ class GuildsService {
     return saveData;
   }
 
-  public async verifyPhone(req: RequestWithGuild): Promise<string> {
+  public async verifyPhone(req: RequestWithGuild): Promise<any> {
     if(!req.isPremium) throw new HttpException(403, "해당 기능은 프리미엄 전용 기능입니다")
-    const user = await client.users.fetch(req.body.userId)
+    const user = await req.guild.members.fetch(req.body.userId)
     if(!user) throw new HttpException(404, "인증을 진행하는 유저를 찾을 수 없습니다")
+    const verifyNumber = generateRandomNumber(5)
+    const verifyToken = randomstring.generate({ length: 25 });
+    const verfiyPhoneDB = new verifyPhoneModel({
+      user_id: user.id,
+      guild_id: req.guild.id,
+      verfiyKey: verifyNumber,
+      status: "open",
+      token: verifyToken,
+      phoneNumber: req.body.phoneNumber
+    })
+    await verfiyPhoneDB.save().catch(() => {
+      throw new HttpException(500, "데이터 저장중 오류가 발생했습니다");
+    })
     try {
-      await sendMessage(req.body.phoneNumber, KAKAO_MESSAGE_TEMPLATE.PREMIUM_SUCCESS, {
-        "#{이름}": user.username
+      await sendMessage(req.body.phoneNumber, KAKAO_MESSAGE_TEMPLATE.VERIFY_MESSAGE, {
+        "#{이름}": user.user.username,
+        "#{인증번호}": verifyNumber
       })
     } catch(e) {
-      throw new HttpException(500, "인증번호 발송에 실패하였습니다.")
+      throw new HttpException(500, e.message)
     }
-    return 
+    return {
+      token: verifyToken,
+      phoneNumber: req.body.phoneNumber
+    }
   }
 
   public async voteData(req: RequestWithGuild): Promise<string> {
