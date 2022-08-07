@@ -72,9 +72,9 @@ class PaymentsService {
     })
     if(confirmData.error) throw new HttpException(confirmData.status ? confirmData.status : 500, confirmData.message ? confirmData.message : "결제 처리를 실패했습니다")
     const payments = await paymentsModel.findOne({orderId})
-    await guildPremiumHanler(payments.target, payments.item, req.user.id)
     await userModel.updateOne({id: req.user.id}, {$set: {phone}})
     await paymentsModel.updateOne({orderId}, {$set: {payment: confirmData.data, process: "success"}})
+    await guildPremiumHanler(payments.target, payments.item, req.user.id)
     return confirmData.data
   }
 
