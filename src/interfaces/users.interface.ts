@@ -1,4 +1,4 @@
-import { RESTAPIPartialCurrentUserGuild, RESTGetAPICurrentUserGuildsResult } from "discord-api-types/v10";
+import { RESTAPIPartialCurrentUserGuild } from "discord-api-types/v10";
 import { User as DiscordUser } from "discord.js"
 
 export interface User {
@@ -6,6 +6,7 @@ export interface User {
   _id: string;
   id: string;
   email: string;
+  phone: string;
   accessToken: string;
   refreshToken: string;
   battlebot_flags: number;
@@ -21,6 +22,9 @@ export interface User {
   expires_in: number;
   published_date: Date;
   minecraft_id?: string;
+  toss_accessToken: String,
+  toss_refreshToken: String,
+  toss_tokenType: String,
   user: DiscordUser
 }
 

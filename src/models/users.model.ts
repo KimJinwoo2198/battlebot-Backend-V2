@@ -5,6 +5,7 @@ const userSchema: Schema = new Schema({
   _id: String,
   id: String,
   email: String,
+  phone: String,
   token: String,
   kakao_accessToken: String,
   kakao_refreshToken: String,
@@ -19,6 +20,9 @@ const userSchema: Schema = new Schema({
   refreshToken: String,
   expires_in: Number,
   minecraft_id: String,
+  toss_accessToken: String,
+  toss_refreshToken: String,
+  toss_tokenType: String,
   published_date: { type: Date, default: Date.now },
 });
 

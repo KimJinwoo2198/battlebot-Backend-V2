@@ -1,10 +1,10 @@
 import { RequestWithUser } from "./auth.interface";
 import { Embed, Guild } from "discord.js";
-import { Types as mongoTypes } from "mongoose"
+import { Types as mongoTypes } from "mongoose";
 export interface RequestWithGuild extends RequestWithUser {
   guild: Guild;
   isAdmin: Boolean;
-  isPremium: Boolean
+  isPremium: Boolean;
 }
 export interface premiumGuild {
   guild_id: string;
@@ -12,9 +12,15 @@ export interface premiumGuild {
   published_date: Date;
 }
 
+export interface premiumUser {
+  user_id: string;
+  nextpay_date: Date;
+  published_date: Date;
+}
+
 export interface VoteItem {
   item_id: string;
-  item_name: string
+  item_name: string;
   vote: number;
 }
 
@@ -23,25 +29,25 @@ export interface Vote {
   guild_id: string;
   message_id: string;
   vote_items: VoteItem[];
-  status: voteStatus
+  status: voteStatus;
 }
 
 export interface Verify {
-  guild_id: String,
-  user_id: String,
-  token: String,
-  status: String,
-  published_date: Date
+  guild_id: String;
+  user_id: String;
+  token: String;
+  status: String;
+  published_date: Date;
 }
 
 export interface VerifyPhone {
-  guild_id: String,
-  user_id: String,
-  token: String,
-  status: String,
-  phoneNumber: String,
-  verfiyKey: String,
-  published_date: Date
+  guild_id: String;
+  user_id: String;
+  token: String;
+  status: String;
+  phoneNumber: String;
+  verfiyKey: String;
+  published_date: Date;
 }
 
 export interface Warning {
@@ -60,14 +66,14 @@ export interface Ticket {
   userId: string;
   ticketId: string;
   published_date?: Date;
-  messages: TicketMessage[]
+  messages: TicketMessage[];
 }
 
 export interface TicketMessage {
-  author: object | string,
-  created: Date,
-  messages: string,
-  embed: Embed
+  author: object | string;
+  created: Date;
+  messages: string;
+  embed: Embed;
 }
 
 export interface TicketSetting {
@@ -80,11 +86,9 @@ export interface TicketSetting {
 export interface CustomLinkSetting {
   guild_id: string;
   path: string;
-  useage: Number
-  type: "custom" | "random"
+  useage: Number;
+  type: "custom" | "random";
   published_date: Date;
 }
 
-
-
-export type voteStatus = 'open' | 'close'
+export type voteStatus = "open" | "close";

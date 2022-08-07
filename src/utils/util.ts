@@ -35,3 +35,7 @@ export function generateRandomNumber(n: number) {
   }
   return str
 }
+export function DateTime(time: string|Date) {
+  const dt = new Date(time)
+  return dt.getFullYear() + "년 " + (dt.getMonth() + 1) + "월 " + dt.getDate()  + "일 "
+}

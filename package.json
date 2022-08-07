@@ -45,6 +45,7 @@
   "devDependencies": {
     "@swc/cli": "^0.1.51",
     "@swc/core": "^1.2.108",
+    "@tosspayments/brandpay-types": "^0.2.2",
     "@types/bcrypt": "^5.0.0",
     "@types/compression": "^1.7.1",
     "@types/cookie-parser": "^1.4.2",
