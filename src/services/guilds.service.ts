@@ -107,7 +107,7 @@ class GuildsService {
       const ticketSettingDB = new ticketSettingModel()
       ticketSettingDB.guildId = req.guild.id
       ticketSettingDB.categories = categori.id
-      const ticketSettingResult = await ticketSettingDB.save().then((data) => {
+      const ticketSettingResult = await ticketSettingDB.save().then(() => {
         return `티켓 생성 카테고리를 #${categori.name}(으)로 설정하고 #${channel.name} 채널에 티켓을 생성했습니다` 
       })
       .catch((e) => {
@@ -161,7 +161,7 @@ class GuildsService {
       .then((data) => {
         return data._id;
       })
-      .catch((e) => {
+      .catch(() => {
         throw new HttpException(500, "경고 추가 도중 오류가 발생했습니다");
       });
     return saveData;
