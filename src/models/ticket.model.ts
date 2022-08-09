@@ -1,5 +1,5 @@
 import mongoose, { model, Schema, Document } from 'mongoose';
-import { Vote } from '@/interfaces/guild.interface';
+import { Ticket } from '@/interfaces/guild.interface';
 
 const ticketSchema: Schema = new Schema({
     _id: mongoose.Types.ObjectId,
@@ -18,6 +18,6 @@ const ticketSchema: Schema = new Schema({
     published_date: { type: Date, default: Date.now },
 });
 
-const ticketModel = model<Vote & Document>('ticket', ticketSchema, 'ticket');
+const ticketModel = model<Ticket & Document>('ticket', ticketSchema, 'ticket');
 
 export default ticketModel;

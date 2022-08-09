@@ -4,6 +4,7 @@ import premiumGuildModel from "@/models/premiumGuild.model";
 import productsModel from "@/models/products.model";
 import userModel from "@/models/users.model";
 import { EmbedBuilder } from "discord.js";
+import { premiumCache } from "./cache";
 import { client } from "./discord";
 import sendMessage from "./message";
 import { DateTime } from "./util";
@@ -58,7 +59,7 @@ export const guildPremiumHanler = async (
         throw new Error(e.message);
       });
   }
-  
+
   if (NODE_ENV === "production") {
     try {
       await sendMessage(user.phone, KAKAO_MESSAGE_TEMPLATE.PREMIUM_SUCCESS, {
@@ -82,5 +83,31 @@ export const guildPremiumHanler = async (
     await discordUser.send({ embeds: [embed] });
   } catch (e) {
     throw new Error(e.message);
+  }
+  premiumCache.del(guildId)
+};
+
+export const premiumGuildCheck = async (guild: string): Promise<boolean> => {
+  const isPremium = premiumCache.has(guild);
+  if (!isPremium) {
+    const premium = await premiumGuildModel.findOne({
+      guild_id: guild,
+    });
+    if (!premium) {
+      premiumCache.set(guild, false);
+      return false;
+    } else {
+      const now = new Date();
+      const premiumDate = new Date(premium.nextpay_date);
+      if (now < premiumDate) {
+        premiumCache.set(guild, true);
+        return true;
+      } else {
+        premiumCache.set(guild, false);
+        return false;
+      }
+    }
+  } else {
+    return premiumCache.get(guild)
   }
 };

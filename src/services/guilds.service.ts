@@ -56,6 +56,31 @@ class GuildsService {
     return users;
   }
 
+  public async getGuildRoles(req: RequestWithGuild): Promise<User[]> {
+    const roles: any[] = [];
+    await req.guild.roles.fetch();
+    req.guild.roles.cache.forEach((role) => {
+      roles.push({
+        id: role.id,
+        icon: role.icon,
+        color: role.color,
+        name: role.name,
+        members: role.members.size,
+      })
+    })
+    return roles;
+  }
+
+  public async getGuildTickets(req: RequestWithGuild): Promise<any> {
+    const tickets = await ticketModel.find({guildId: req.guild.id})
+    return tickets;
+  }
+
+  public async getGuildVerifys(req: RequestWithGuild): Promise<any> {
+    const tickets = await verifyModel.find({guildId: req.guild.id})
+    return tickets;
+  }
+
   public async setGuildCustomLink(req: RequestWithGuild): Promise<ResponseObj> {
     if(req.body.type === "custom") {
       if(!req.isPremium) throw new HttpException(400, "커스텀 링크 기능은 프리미엄 전용 기능입니다")

@@ -23,6 +23,41 @@ class GuildController {
     }
   };
 
+  public getGuildPremium = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      ResponseWrapper(req, res, {data: req.isPremium})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getGuildTickets = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const tickets = await this.guildsService.getGuildTickets(req)
+      ResponseWrapper(req, res, {data: tickets})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getGuildVerifys = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const verifys = await this.guildsService.getGuildVerifys(req)
+      ResponseWrapper(req, res, {data: verifys})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getGuildRoles = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const roles = await this.guildsService.getGuildRoles(req)
+      ResponseWrapper(req, res, {data: roles})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getGuildMember = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
     try {
       const member = await this.guildsService.getGuildMember(req)

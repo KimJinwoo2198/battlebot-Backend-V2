@@ -8,6 +8,7 @@ import { RequestWithGuild } from "@/interfaces/guild.interface";
 import { client } from "@utils/discord";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import { checkUserFlag } from "@/utils/util";
+import { premiumGuildCheck } from "@/utils/premium";
 
 const authMiddleware = async (
   req: RequestWithUser,
@@ -77,19 +78,11 @@ const authAdminMiddleware = async (
         };
         const guild = client.guilds.cache.get(req.params.id);
         if (guild) {
-          const premium = await premiumGuildModel.findOne({
-            guild_id: guild.id,
-          });
+          const premium = await premiumGuildCheck(guild.id);
           if (!premium) {
             req.isPremium = false;
           } else {
-            const now = new Date();
-            const premiumDate = new Date(premium.nextpay_date);
-            if (now < premiumDate) {
-              req.isPremium = true;
-            } else {
-              req.isPremium = false;
-            }
+            req.isPremium = true;
           }
           if (checkUserFlag(findUser.battlebot_flags, "admin")) {
             req.guild = guild;
@@ -149,21 +142,11 @@ const authBotMiddleware = async (
       if (BOT_TOKEN === Authorization) {
         const guild = client.guilds.cache.get(req.params.id);
         if (guild) {
-          console.log(guild)
-          const premium = await premiumGuildModel.findOne({
-            guild_id: guild.id,
-          });
-          console.log(premium)
+          const premium = await premiumGuildCheck(guild.id);
           if (!premium) {
             req.isPremium = false;
           } else {
-            const now = new Date();
-            const premiumDate = new Date(premium.nextpay_date);
-            if (now < premiumDate) {
-              req.isPremium = true;
-            } else {
-              req.isPremium = false;
-            }
+            req.isPremium = true;
           }
           req.guild = guild;
           req.isAdmin = true;

@@ -16,7 +16,11 @@ class GuildRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/:id`, authAdminMiddleware, this.guildsController.getGuild);
+    this.router.get(`${this.path}/:id/roles`, authAdminMiddleware, this.guildsController.getGuildRoles);
+    this.router.get(`${this.path}/:id/premium`, authAdminMiddleware, this.guildsController.getGuildPremium);
     this.router.get(`${this.path}/:id/members`, authAdminMiddleware, this.guildsController.getGuildMembers);
+    this.router.get(`${this.path}/:id/tickets`, authAdminMiddleware, this.guildsController.getGuildTickets);
+    this.router.get(`${this.path}/:id/verifys`, authAdminMiddleware, this.guildsController.getGuildTickets);
     this.router.get(`${this.path}/:id/members/:userId`, authAdminMiddleware, this.guildsController.getGuildMember);
     this.router.post(`${this.path}/:id/verifyphone`, authBotMiddleware, validationMiddleware(verifyPhone, 'body'), this.guildsController.guildVerifyPhone);
     this.router.post(`${this.path}/:id/customlink`, authAdminMiddleware, validationMiddleware(CustomLink, 'body'), this.guildsController.setCustomLink);
