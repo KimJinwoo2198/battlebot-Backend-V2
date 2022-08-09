@@ -1,17 +1,18 @@
-import { confirmPayment, newPayments } from "@/dtos/payments.dto";
+import { confirmPayment, newPayments, PaymentsGift } from "@/dtos/payments.dto";
 import { HttpException } from "@/exceptions/HttpException";
 import { RequestWithUser } from "@/interfaces/auth.interface";
 import paymentsModel from "@/models/payments.model";
 import sellItemModel from "@/models/products.model";
 import userModel from "@/models/users.model";
 import { client } from "@/utils/discord";
-import { tossClient, tossRefreshToken } from "@/utils/toss";
+import { tossClient, tossPaymentsClient, tossRefreshToken } from "@/utils/toss";
 import { randomUUID } from "crypto";
 import type { Methods } from "@tosspayments/brandpay-types";
-import { PaymentsMethods } from "@/interfaces/payments.interface";
+import { Payments, PaymentsMethods } from "@/interfaces/payments.interface";
 import { guildPremiumHanler } from "@/utils/premium";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import premiumUserModel from "@/models/premiumUser.model";
+import { Document } from "mongoose";
 
 class PaymentsService {
   public async getPayementsAuth(req: RequestWithUser): Promise<any> {
@@ -99,8 +100,7 @@ class PaymentsService {
   }
 
   public async confirmPayment(req: RequestWithUser): Promise<any> {
-    const { amount, orderId, paymentKey, phone } =
-      req.body as confirmPayment;
+    const { amount, orderId, paymentKey, phone } = req.body as confirmPayment;
     const confirmData = await tossClient("POST", `/v1/payments/${paymentKey}`, {
       orderId,
       amount,
@@ -118,6 +118,38 @@ class PaymentsService {
     );
     await guildPremiumHanler(payments.target, payments.item, req.user.id);
     return confirmData.data;
+  }
+
+  public async getSuccessOrderCultureland(req: RequestWithUser): Promise<any> {
+    const { orderId, amount, paymentKey, phone } = req.body as PaymentsGift;
+    const payments = await paymentsModel.findOne({
+      orderId: orderId,
+    });
+    if (!payments) throw new HttpException(404, "찾을 수 없는 주문정보입니다");
+    if (payments.process === "success") throw new HttpException(409, "이미 처리가 완료된 주문정보입니다");
+    const orderCulturelandData = await tossPaymentsClient(
+      "POST",
+      `/v1/payments/confirm`,
+      {
+        orderId,
+        amount,
+        paymentKey,
+      }
+    );
+    if (orderCulturelandData.error) {
+      throw new HttpException(
+        orderCulturelandData.status ? orderCulturelandData.status : 500,
+        orderCulturelandData.message ? orderCulturelandData.message : "결제 처리를 실패했습니다"
+      );
+    }
+    await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
+    await paymentsModel.updateOne(
+      { orderId },
+      { $set: { payment: orderCulturelandData.data, process: "success" } }
+    );
+    await guildPremiumHanler(payments.target, payments.item, req.user.id);
+    const paymentsMeta = await this.getPaymentsMetadata(orderId)
+    return paymentsMeta;
   }
 
   public async addNewOrder(req: RequestWithUser): Promise<any> {
@@ -150,41 +182,8 @@ class PaymentsService {
     });
     if (!payments || req.user.id !== payments.userId)
       throw new HttpException(404, "해당 결제는 찾을 수 없습니다");
-    let itemMetadata;
-    let nextPayDate: Date;
-    if (payments.type === "guild") {
-      const guild = client.guilds.cache.get(payments.target);
-      if (!guild)
-        throw new HttpException(404, "결제를 진행했던 서버를 찾을 수 없습니다");
-      itemMetadata = {
-        type: "guild",
-        id: guild.id,
-        icon: guild.icon,
-        name: guild.name,
-      };
-      const guildPremium = await premiumGuildModel.findOne({
-        guild_id: guild.id,
-      });
-      nextPayDate = guildPremium.nextpay_date;
-    } else if (payments.type === "user") {
-      const user = client.users.cache.get(payments.target);
-      if (!user)
-        throw new HttpException(404, "결제를 진행했던 유저를 찾을 수 없습니다");
-      itemMetadata = {
-        type: "user",
-        id: user.id,
-        avatar: user.avatar,
-        discriminator: user.discriminator,
-        name: user.username,
-      };
-      const userPremium = await premiumUserModel.findOne({ user_id: user.id });
-      nextPayDate = userPremium.nextpay_date;
-    }
-    return {
-      metadata: itemMetadata,
-      nextPayDate,
-      ...payments.toJSON(),
-    };
+    const paymentsMeta = await this.getPaymentsMetadata(req.params.orderId)
+    return paymentsMeta;
   }
 
   public async getOrder(req: RequestWithUser): Promise<any> {
@@ -224,6 +223,45 @@ class PaymentsService {
       id: payments.orderId,
       amount: payments.amount,
     };
+  }
+
+  private async getPaymentsMetadata(orderId: string): Promise<any> {
+    const payments = await paymentsModel.findOne({ orderId });
+    let itemMetadata;
+    let nextPayDate: Date;
+    if (payments.type === "guild") {
+      const guild = client.guilds.cache.get(payments.target);
+      if (!guild)
+        throw new HttpException(404, "결제를 진행했던 서버를 찾을 수 없습니다");
+      itemMetadata = {
+        type: "guild",
+        id: guild.id,
+        icon: guild.icon,
+        name: guild.name,
+      };
+      const guildPremium = await premiumGuildModel.findOne({
+        guild_id: guild.id,
+      });
+      nextPayDate = guildPremium.nextpay_date;
+    } else if (payments.type === "user") {
+      const user = client.users.cache.get(payments.target);
+      if (!user)
+        throw new HttpException(404, "결제를 진행했던 유저를 찾을 수 없습니다");
+      itemMetadata = {
+        type: "user",
+        id: user.id,
+        avatar: user.avatar,
+        discriminator: user.discriminator,
+        name: user.username,
+      };
+      const userPremium = await premiumUserModel.findOne({ user_id: user.id });
+      nextPayDate = userPremium.nextpay_date;
+    }
+    return {
+      metadata: itemMetadata,
+      nextPayDate,
+      ...payments.toJSON(),
+    }
   }
 }
 

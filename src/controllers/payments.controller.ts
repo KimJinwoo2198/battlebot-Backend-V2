@@ -33,6 +33,15 @@ class PaymentsController {
     }
   };
 
+  public getSuccessOrderCultureland = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const getSuccessOrderCultureland = await this.paymentsService.getSuccessOrderCultureland(req)
+      ResponseWrapper(req, res, {data: getSuccessOrderCultureland})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getPaymentsAuth = async(req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const getPayementsAuth = await this.paymentsService.getPayementsAuth(req)
