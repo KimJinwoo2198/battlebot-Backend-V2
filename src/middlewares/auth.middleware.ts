@@ -6,7 +6,6 @@ import { DataStoredInToken, RequestWithUser } from "@interfaces/auth.interface";
 import userModel from "@models/users.model";
 import { RequestWithGuild } from "@/interfaces/guild.interface";
 import { client } from "@utils/discord";
-import premiumGuildModel from "@/models/premiumGuild.model";
 import { checkUserFlag } from "@/utils/util";
 import { premiumGuildCheck } from "@/utils/premium";
 
@@ -39,13 +38,13 @@ const authMiddleware = async (
         };
         next();
       } else {
-        next(new HttpException(401, "올바르지 않은 유저 토큰입니다"));
+        next(new HttpException(401, req.t("auth.unknownUserToken")));
       }
     } else {
-      next(new HttpException(401, "유저 토큰이 없습니다"));
+      next(new HttpException(401, req.t("auth.notToken")));
     }
   } catch (error) {
-    next(new HttpException(401, "올바르지 않은 유저 토큰입니다"));
+    next(new HttpException(401, req.t("auth.unknownUserToken")));
   }
 };
 
@@ -100,29 +99,29 @@ const authAdminMiddleware = async (
                 next();
               } else {
                 next(
-                  new HttpException(403, "해당 서버를 관리할 권한이 없습니다")
+                  new HttpException(403, req.t("auth.notHaveManageServerPermission"))
                 );
               }
             } else {
               next(
                 new HttpException(
                   403,
-                  "해당 서버에서 관리자를 찾지 못했습니다. 서버에서 채팅 입력후 다시 시도해주세요."
+                  req.t("auth.notFoundAdminUseChatServer")
                 )
               );
             }
           }
         } else {
-          next(new HttpException(404, "찾을 수 없는 서버입니다."));
+          next(new HttpException(404, req.t("server.notfound")));
         }
       } else {
-        next(new HttpException(401, "올바르지 않은 유저 토큰입니다"));
+        next(new HttpException(401, req.t("auth.unknownUserToken")));
       }
     } else {
-      next(new HttpException(401, "유저 토큰이 없습니다"));
+      next(new HttpException(401, req.t("auth.notToken")));
     }
   } catch (error) {
-    next(new HttpException(401, "올바르지 않은 유저 토큰입니다"));
+    next(new HttpException(401, req.t("auth.unknownUserToken")));
   }
 };
 
@@ -152,16 +151,16 @@ const authBotMiddleware = async (
           req.isAdmin = true;
           next();
         } else {
-          next(new HttpException(401, "해당 서버를 찾을 수 없습니다"));
+          next(new HttpException(401, req.t("server.notfoundThat")));
         }
       } else {
-        next(new HttpException(401, "올바르지 않은 유저 토큰입니다"));
+        next(new HttpException(401, req.t("auth.unknownUserToken")));
       }
     } else {
-      next(new HttpException(401, "유저 토큰이 없습니다"));
+      next(new HttpException(401, req.t("auth.notToken")));
     }
   } catch (error) {
-    next(new HttpException(401, "올바르지 않은 유저 토큰입니다"));
+    next(new HttpException(401, req.t("auth.unknownUserToken")));
   }
 };
 

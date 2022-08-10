@@ -83,10 +83,10 @@ class GuildsService {
 
   public async setGuildCustomLink(req: RequestWithGuild): Promise<ResponseObj> {
     if(req.body.type === "custom") {
-      if(!req.isPremium) throw new HttpException(400, "커스텀 링크 기능은 프리미엄 전용 기능입니다")
-      if(!req.body.path) throw new HttpException(400, "사용할 커스텀 링크를 입력해주세요")
+      if(!req.isPremium) throw new HttpException(400, req.t("customlink.onlyPremium"))
+      if(!req.body.path) throw new HttpException(400, req.t("customlink.inputUse"))
       const isUseing = await customLinkSettingModel.findOne({ path: req.body.path });
-      if(isUseing && isUseing.guild_id !== req.guild.id) throw new HttpException(400, "이미 사용 중인 커스텀 링크입니다")
+      if(isUseing && isUseing.guild_id !== req.guild.id) throw new HttpException(400, req.t("customlink.already"))
       const customlinkDB = await customLinkSettingModel.findOne({guild_id: req.guild.id, type: "custom"});
       if(!customlinkDB) {
         const customLinkSetting = new customLinkSettingModel()
@@ -94,12 +94,12 @@ class GuildsService {
         customLinkSetting.path = req.body.path;
         customLinkSetting.type = "custom";
         await customLinkSetting.save().catch(e => {
-          if(e) throw new HttpException(500, "커스텀 링크 설정 중 오류가 발생했습니다")
+          if(e) throw new HttpException(500, req.t("customlink.error"))
         })
-        return { message: `${req.body.path}로 서버 커스텀 링크를 설정했습니다` }
+        return { message: `${req.body.path}${req.t("customlink.setting")}`}
       } else {
         await customlinkDB.updateOne({ $set: { path: req.body.path } });
-        return { message: `${req.body.path}로 서버 커스텀 링크를 설정했습니다` }
+        return { message: `${req.body.path}${req.t("customlink.setting")}` }
       }
     }
     if(req.body.type === "random") {
@@ -110,15 +110,15 @@ class GuildsService {
   public async createTicket(req: RequestWithGuild): Promise<string> {
     const channel = req.guild.channels.cache.get(req.body.channel)
     const categori = req.guild.channels.cache.get(req.body.categori)
-    if(!channel || channel.type !== ChannelType.GuildText) throw new HttpException(404, '티켓을 생성할 채널을 찾을 수 없습니다.')
-    if(!categori || categori.type !== ChannelType.GuildCategory) throw new HttpException(404, '티켓을 생성할 카테고리를 찾을 수 없습니다.')
+    if(!channel || channel.type !== ChannelType.GuildText) throw new HttpException(404, req.t("ticket.notFoundChannel"))
+    if(!categori || categori.type !== ChannelType.GuildCategory) throw new HttpException(404, req.t("ticket.notFoundCategori"))
     const ticketDB = await ticketSettingModel.findOne({guildId: req.guild.id})
     const embed = new EmbedBuilder()
       .setTitle(req.body.title)
       .setDescription(req.body.description)
       .setColor(req.body.color ? req.body.color : '#2f3136')
     const button = new ButtonBuilder()
-      .setLabel(req.body.button ? req.body.button : "티켓 생성하기")
+      .setLabel(req.body.button ? req.body.button : req.t("ticket.makeButton"))
       .setStyle(ButtonStyle.Primary)
       .setEmoji(req.body.emoji ? req.body.emoji : '🎫')
       .setCustomId('create')
@@ -127,16 +127,16 @@ class GuildsService {
     if(ticketDB) {
       await ticketSettingModel.updateOne({guildId: req.guild.id}, {$set: {categories: categori.id}})
       await channel.send({embeds: [embed], components: [row]})
-      return `티켓 생성 카테고리를 #${categori.name}(으)로 변경하고 #${channel.name} 채널에 티켓을 생성했습니다` 
+      return req.t("ticket.changeCategori", {categori: categori.name, channel: channel.name}) 
     } else {
       const ticketSettingDB = new ticketSettingModel()
       ticketSettingDB.guildId = req.guild.id
       ticketSettingDB.categories = categori.id
       const ticketSettingResult = await ticketSettingDB.save().then(() => {
-        return `티켓 생성 카테고리를 #${categori.name}(으)로 설정하고 #${channel.name} 채널에 티켓을 생성했습니다` 
+        return req.t("ticket.settingCategori", {categori: categori.name, channel: channel.name})
       })
       .catch((e) => {
-        if(e) return `티켓 설정을 저장하는 도중 오류가 발생했습니다` 
+        if(e) return req.t("error")
       })
       return ticketSettingResult;
     }
@@ -144,7 +144,7 @@ class GuildsService {
 
   public async getGuildMember(req: RequestWithGuild): Promise<any> {
     const user = req.guild.members.cache.get(req.params.userId as string);
-    if (!user) throw new HttpException(404, "찾을 수 없는 유저입니다");
+    if (!user) throw new HttpException(404, req.t("notFoundUser"));
     const warningDB = await warningModel
       .find({ guildId: req.guild.id, userId: user.id })
       .sort({ published_date: -1 })
@@ -174,7 +174,7 @@ class GuildsService {
 
   public async addGuildMemberWarning(req: RequestWithGuild): Promise<string> {
     const user = req.guild.members.cache.get(req.params.userId as string);
-    if (!user) throw new HttpException(404, "찾을 수 없는 유저입니다");
+    if (!user) throw new HttpException(404, req.t("notFoundUser"));
     const warnAdded = new warningModel({
       reason: req.body.reason,
       guildId: req.guild.id,
@@ -187,15 +187,15 @@ class GuildsService {
         return data._id;
       })
       .catch(() => {
-        throw new HttpException(500, "경고 추가 도중 오류가 발생했습니다");
+        throw new HttpException(500, req.t("warning.error"));
       });
     return saveData;
   }
 
   public async verifyPhone(req: RequestWithGuild): Promise<any> {
-    if(!req.isPremium) throw new HttpException(403, "해당 기능은 프리미엄 전용 기능입니다")
+    if(!req.isPremium) throw new HttpException(403, req.t("verifyPhone.onlyPremium"))
     const user = await req.guild.members.fetch(req.body.userId)
-    if(!user) throw new HttpException(404, "인증을 진행하는 유저를 찾을 수 없습니다")
+    if(!user) throw new HttpException(404, req.t("verifyPhone.notFoundUser"))
     const verifyNumber = generateRandomNumber(5)
     const verifyToken = randomstring.generate({ length: 25 });
     const verfiyPhoneDB = new verifyPhoneModel({
@@ -207,7 +207,7 @@ class GuildsService {
       phoneNumber: req.body.phoneNumber
     })
     await verfiyPhoneDB.save().catch(() => {
-      throw new HttpException(500, "데이터 저장중 오류가 발생했습니다");
+      throw new HttpException(500, req.t("dataSaveError"));
     })
     try {
       await sendMessage(req.body.phoneNumber, KAKAO_MESSAGE_TEMPLATE.VERIFY_MESSAGE, {
@@ -227,7 +227,7 @@ class GuildsService {
     const { channel, voteTitle, voteItems } = req.body;
     const voteChannel = req.guild.channels.cache.get(channel) as TextChannel;
     if (!voteChannel)
-      throw new HttpException(400, "투표를 진행하시는 채널을 찾지 못했습니다");
+      throw new HttpException(400, req.t("vote.notFoundChannel"));
     const buttonsList: ButtonBuilder[] = [];
     const items: VoteItem[] = [];
     voteItems.forEach((el) => {
@@ -275,9 +275,9 @@ class GuildsService {
     voteDB.vote_items = items;
     voteDB.status = "open";
     voteDB.save((err) => {
-      if (err) throw new HttpException(500, "투표 설정중 오류가 발생했습니다");
+      if (err) throw new HttpException(500, req.t("vote.error"));
     });
-    return `#${voteChannel.name}에 투표 메시지가 설정되었습니다`;
+    return req.t("vote.settingChannel", {channel: voteChannel.name});
   }
 }
 

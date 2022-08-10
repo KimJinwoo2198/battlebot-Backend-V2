@@ -18,11 +18,12 @@ import axios, { AxiosError } from "axios";
 import {} from "@discordjs/rest";
 import { RESTGetAPICurrentUserGuildsResult } from "discord-api-types/v10";
 import { client } from "@/utils/discord";
+import { Request } from "express";
 
 class AuthService {
   public users = userModel;
 
-  public async login(code: string): Promise<string> {
+  public async login(code: string, req: Request): Promise<string> {
     const formData = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
@@ -38,7 +39,7 @@ class AuthService {
       })
       .catch((error) => {
         console.log(error.response.data);
-        throw new HttpException(401, "유저 인증에 실패했습니다");
+        throw new HttpException(401, req.t("auth.unauthorization"));
       });
     const user = await axios.get(`https://discord.com/api/users/@me`, {
       headers: {
@@ -90,18 +91,18 @@ class AuthService {
         if (e.response.status === 429)
           throw new HttpException(
             429,
-            "너무 많은 요청을 보냈습니다 잠시 후 다시 시도해 주세요"
+            req.t("tooManyRequest")
           );
         if (e.response.status === 401)
           throw new HttpException(
             401,
-            "유저 인증에 실패했습니다 로그아웃 후 다시 시도해 주세요"
+            req.t("auth.unauthorizationRelogin")
           );
         throw new HttpException(
           500,
           e.response.data
             ? e.response.data["message"]
-            : "알 수 없는 오류가 발생했습니다"
+            : req.t("unknownError")
         );
       })) as unknown as RESTGetAPICurrentUserGuildsResult;
     const guilds: UserGulds = [];

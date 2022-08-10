@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { RequestWithUser } from '@interfaces/auth.interface';
-import { User } from '@interfaces/users.interface';
 import AuthService from '@services/auth.service';
 import { CLIENT_ID, REDIRECT_URL, COOKIE_DOMAIN, FRONT_REDIRECT_URL } from '@config';
 import ResponseWrapper from '@/utils/responseWrapper';
@@ -12,7 +11,7 @@ class AuthController {
     try {
       const code = req.query.code;
       if (!code) return res.redirect(`/auth/discord`);
-      const cookie = await this.authService.login(code as string);
+      const cookie = await this.authService.login(code as string, req);
       const redirect = this.states.get(req.query.state as string)
       res.setHeader('Set-Cookie', [cookie]);
       res.redirect(`${FRONT_REDIRECT_URL}/${redirect ? redirect : ""}`);

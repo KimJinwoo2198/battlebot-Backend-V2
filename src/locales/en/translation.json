@@ -1,0 +1,65 @@
+{
+    "hello": {
+      "world": "world"
+    },
+    "auth": {
+      "unauthorization": "유저 인증에 실패했습니다",
+      "unauthorizationRelogin": "유저 인증에 실패했습니다 로그아웃 후 다시 시도해 주세요",
+      "unknownUserToken": "올바르지 않은 유저 토큰입니다",
+      "notHaveManageServerPermission": "해당 서버를 관리할 권한이 없습니다",
+      "notFoundAdminUseChatServer": "해당 서버에서 관리자를 찾지 못했습니다. 서버에서 채팅 입력후 다시 시도해주세요.",
+      "notToken": "유저 토큰이 없습니다"
+    },
+    "customlink": {
+      "onlyPremium": "커스텀 링크 기능은 프리미엄 전용 기능입니다",
+      "inputUse": "사용할 커스텀 링크를 입력해주세요",
+      "already": "이미 사용 중인 커스텀 링크입니다",
+      "error": "커스텀 링크 설정 중 오류가 발생했습니다",
+      "setting": "로 서버 커스텀 링크를 설정했습니다"
+    },
+    "ticket": {
+      "notFoundChannel": "티켓을 생성할 채널을 찾을 수 없습니다.",
+      "notFoundCategori": "티켓을 생성할 카테고리를 찾을 수 없습니다.",
+      "makeButton": "티켓 생성하기",
+      "changeCategori": "티켓 생성 카테고리를 #__categori__(으)로 변경하고 #__channel__ 채널에 티켓을 생성했습니다",
+      "settingCategori": "티켓 생성 카테고리를 #__categori__(으)로 변경하고 #__channel__ 채널에 티켓을 생성했습니다",
+      "error": "티켓 설정을 저장하는 도중 오류가 발생했습니다"
+    },
+    "verifyPhone": {
+      "onlyPremium": "휴대폰 인증 기능은 프리미엄 전용 기능입니다",
+      "notFoundUser": "인증을 진행하는 유저를 찾을 수 없습니다"
+    },
+    "warning": {
+      "error": "경고 추가 도중 오류가 발생했습니다"
+    },
+    "vote": {
+      "notFoundChannel": "투표를 진행하시는 채널을 찾지 못했습니다",
+      "error": "투표 설정중 오류가 발생했습니다",
+      "settingChannel": "#__channel__에 투표 메시지가 설정되었습니다"
+    },
+    "payments": {
+      "notFoundOrder": "찾을 수 없는 주문정보입니다",
+      "alreadySuccessOrder": "이미 처리가 완료된 주문정보입니다",
+      "notFoundPayments": "해당 결제는 찾을 수 없습니다",
+      "alreadySuccessPayments": "해당 결제는 이미 완료되었습니다",
+      "notFoundServer": "구매를 진행하는 서버를 찾을 수 없습니다",
+      "notFoundUser": "구매를 진행하는 유저를 찾을 수 없습니다",
+      "notFoundPaymentsServer": "결제를 진행했던 서버를 찾을 수 없습니다",
+      "notFoundPaymentsUser": "결제를 진행했던 유저를 찾을 수 없습니다"
+    },
+    "order": {
+      "error": "결제 정보 생성중 오류가 발생했습니다",
+      "notFoundItem": "해당 상품은 찾을 수 없습니다"
+    },
+    "server": {
+      "notfound": "찾을 수 없는 서버입니다.",
+      "notfoundThat": "해당 서버를 찾을 수 없습니다"
+    },
+    "notFoundUser": "찾을 수 없는 유저입니다",
+    "notNeedParams": "필수 파라미터가 없습니다",
+    "tooManyRequest": "너무 많은 요청을 보냈습니다 잠시 후 다시 시도해 주세요",
+    "unknownError": "알 수 없는 오류가 발생했습니다",
+    "successRequest": "요청을 성공적으로 실행했습니다.",
+    "dataSaveError": "데이터 저장중 오류가 발생했습니다"
+  }
+  

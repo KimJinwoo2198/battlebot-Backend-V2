@@ -13,14 +13,15 @@ import { guildPremiumHanler } from "@/utils/premium";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import premiumUserModel from "@/models/premiumUser.model";
 import { Document } from "mongoose";
+import { Request } from "express";
 
 class PaymentsService {
   public async getPayementsAuth(req: RequestWithUser): Promise<any> {
     const { code, customerKey } = req.query;
-    if (!code) throw new HttpException(400, "필수 파라미터가 없습니다");
-    if (!customerKey) throw new HttpException(400, "필수 파라미터가 없습니다");
+    if (!code) throw new HttpException(400, req.t("notNeedParams"));
+    if (!customerKey) throw new HttpException(400, req.t("notNeedParams"));
     if (req.user.id !== customerKey)
-      throw new HttpException(401, "유저 인증에 실페했습니다");
+      throw new HttpException(401, req.t("auth.unauthorization"));
     const authData = await tossClient(
       "POST",
       "/v1/brandpay/authorizations/access-token",
@@ -43,7 +44,7 @@ class PaymentsService {
     if (authData.error)
       throw new HttpException(
         401,
-        authData.message ? authData.message : "유저 인증에 실페했습니다"
+        authData.message ? authData.message : req.t("auth.unauthorization")
       );
     return authData;
   }
@@ -58,7 +59,7 @@ class PaymentsService {
     if (tossMethodsData.data.code === "INVALID_ACCESS_TOKEN") {
       const refreshToken = await tossRefreshToken(req.user);
       if (!refreshToken)
-        throw new HttpException(401, "유저 인증에 실페했습니다");
+        throw new HttpException(401, req.t("auth.unauthorization"));
       tossMethodsData = await tossClient(
         "GET",
         "/v1/brandpay/payments/methods",
@@ -71,7 +72,7 @@ class PaymentsService {
         401,
         tossMethodsData.message
           ? tossMethodsData.message
-          : "유저 인증에 실페했습니다"
+          : req.t("auth.unauthorization")
       );
     const methodsData: Methods = tossMethodsData.data;
     const methods: PaymentsMethods[] = [];
@@ -108,7 +109,7 @@ class PaymentsService {
     if (confirmData.error)
       throw new HttpException(
         confirmData.status ? confirmData.status : 500,
-        confirmData.message ? confirmData.message : "결제 처리를 실패했습니다"
+        confirmData.message ? confirmData.message : req.t("payments.error")
       );
     const payments = await paymentsModel.findOne({ orderId });
     await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
@@ -125,8 +126,8 @@ class PaymentsService {
     const payments = await paymentsModel.findOne({
       orderId: orderId,
     });
-    if (!payments) throw new HttpException(404, "찾을 수 없는 주문정보입니다");
-    if (payments.process === "success") throw new HttpException(409, "이미 처리가 완료된 주문정보입니다");
+    if (!payments) throw new HttpException(404, req.t("payments.notFoundOrder"));
+    if (payments.process === "success") throw new HttpException(409, req.t("payments.alreadySuccessOrder"));
     const orderCulturelandData = await tossPaymentsClient(
       "POST",
       `/v1/payments/confirm`,
@@ -139,7 +140,7 @@ class PaymentsService {
     if (orderCulturelandData.error) {
       throw new HttpException(
         orderCulturelandData.status ? orderCulturelandData.status : 500,
-        orderCulturelandData.message ? orderCulturelandData.message : "결제 처리를 실패했습니다"
+        orderCulturelandData.message ? orderCulturelandData.message : req.t("payments.error")
       );
     }
     await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
@@ -148,7 +149,7 @@ class PaymentsService {
       { $set: { payment: orderCulturelandData.data, process: "success" } }
     );
     await guildPremiumHanler(payments.target, payments.item, req.user.id);
-    const paymentsMeta = await this.getPaymentsMetadata(orderId)
+    const paymentsMeta = await this.getPaymentsMetadata(orderId, req)
     return paymentsMeta;
   }
 
@@ -157,7 +158,7 @@ class PaymentsService {
     const user = req.user;
     const orderId = randomUUID();
     const item = await sellItemModel.findOne({ itemId: paymentsReq.itemId });
-    if (!item) throw new HttpException(404, "해당 상품은 찾을 수 없습니다");
+    if (!item) throw new HttpException(404, req.t("order.notFoundItem"));
     const paymentsDB = new paymentsModel({
       userId: user.id,
       orderId: orderId,
@@ -169,7 +170,7 @@ class PaymentsService {
       item: paymentsReq.itemId,
     });
     await paymentsDB.save().catch(() => {
-      throw new HttpException(500, "결제 정보 생성중 오류가 발생했습니다");
+      throw new HttpException(500, req.t("order.error"));
     });
     return {
       paymentId: orderId,
@@ -181,8 +182,8 @@ class PaymentsService {
       orderId: req.params.orderId,
     });
     if (!payments || req.user.id !== payments.userId)
-      throw new HttpException(404, "해당 결제는 찾을 수 없습니다");
-    const paymentsMeta = await this.getPaymentsMetadata(req.params.orderId)
+      throw new HttpException(404, req.t("payments.notFoundPayments"));
+    const paymentsMeta = await this.getPaymentsMetadata(req.params.orderId, req)
     return paymentsMeta;
   }
 
@@ -191,14 +192,14 @@ class PaymentsService {
       orderId: req.params.orderId,
     });
     if (!payments || payments.userId !== req.user.id)
-      throw new HttpException(404, "해당 결제는 찾을 수 없습니다");
+      throw new HttpException(404, req.t("payments.notFoundPayments"));
     if (payments.process === "success")
-      throw new HttpException(400, "해당 결제는 이미 완료되었습니다");
+      throw new HttpException(400, req.t("payments.alreadySuccessPayments"));
     let itemMetadata;
     if (payments.type === "guild") {
       const guild = client.guilds.cache.get(payments.target);
       if (!guild)
-        throw new HttpException(404, "구매를 진행하는 서버를 찾을 수 없습니다");
+        throw new HttpException(404, req.t("payments.notFoundServer"));
       itemMetadata = {
         type: "guild",
         id: guild.id,
@@ -208,7 +209,7 @@ class PaymentsService {
     } else if (payments.type === "user") {
       const user = client.users.cache.get(payments.target);
       if (!user)
-        throw new HttpException(404, "구매를 진행하는 유저를 찾을 수 없습니다");
+        throw new HttpException(404, req.t("payments.notFoundUser"));
       itemMetadata = {
         type: "user",
         id: user.id,
@@ -225,14 +226,14 @@ class PaymentsService {
     };
   }
 
-  private async getPaymentsMetadata(orderId: string): Promise<any> {
+  private async getPaymentsMetadata(orderId: string, req: Request): Promise<any> {
     const payments = await paymentsModel.findOne({ orderId });
     let itemMetadata;
     let nextPayDate: Date;
     if (payments.type === "guild") {
       const guild = client.guilds.cache.get(payments.target);
       if (!guild)
-        throw new HttpException(404, "결제를 진행했던 서버를 찾을 수 없습니다");
+        throw new HttpException(404, req.t("payments.notFoundPaymentsServer"));
       itemMetadata = {
         type: "guild",
         id: guild.id,
@@ -246,7 +247,7 @@ class PaymentsService {
     } else if (payments.type === "user") {
       const user = client.users.cache.get(payments.target);
       if (!user)
-        throw new HttpException(404, "결제를 진행했던 유저를 찾을 수 없습니다");
+        throw new HttpException(404, req.t("payments.notFoundPaymentsUser"));
       itemMetadata = {
         type: "user",
         id: user.id,
