@@ -85,8 +85,9 @@ class App {
           addPath: __dirname + "/locales/{{lng}}/{{ns}}.missing.json",
         },
         detection: {
-          order: ['querystring', 'cookie', 'localStorage', 'sessionStorage', 'navigator', 'htmlTag', 'path'],
-          caches: ['localStorage', 'cookie'],
+          order: ['querystring','header'],
+          lookupCookie: 'lang',
+          caches: ['cookie']
         },
         fallbackLng: "ko",
         preload: ["en", "ko"],
