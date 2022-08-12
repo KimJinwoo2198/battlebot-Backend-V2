@@ -27,8 +27,18 @@ export class CustomLink {
   public type: string
 
   @IsOptional()
+  @IsIn(["kakao", "phone", "email"], {message: "올바른 커스텀 링크의 옵션 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_ALLOW_TYPE } })
+  @IsString({message: "커스텀 링크의 옵션 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_SELECT_TYPE }})
+  public option?: string;
+
+  @IsOptional()
   @IsString({message: "커스텀 링크는 문자만 입력가능합니다", context: { errorCode: Error.IS_NOT_STRING }})
   public path?: string
+}
+
+export class DeleteCustomLink {
+  @IsArray({message: "삭제 향목은 Array 형식이여야 합니다", context: { errorCode: Error.IS_NOT_ARRAY }})
+  public path: string[]
 }
 
 export class Ticket {

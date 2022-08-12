@@ -88,6 +88,7 @@ export interface CustomLinkSetting {
   path: string;
   useage: Number;
   type: "custom" | "random";
+  option: "kakao" | "phone" | "email"
   published_date: Date;
 }
 

@@ -6,6 +6,7 @@ const customLinkSettingSchema: Schema = new Schema({
     path: String,
     useage: Number,
     type: String,
+    option: String,
     published_date: { type: Date, default: Date.now },
 });
 

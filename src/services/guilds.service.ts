@@ -6,7 +6,7 @@ import {
   EmbedBuilder,
   Message,
   ActionRowBuilder,
-  User
+  User,
 } from "discord.js";
 import { RequestWithGuild } from "@/interfaces/guild.interface";
 import { HttpException } from "@/exceptions/HttpException";
@@ -23,6 +23,7 @@ import sendMessage from "@/utils/message";
 import { KAKAO_MESSAGE_TEMPLATE } from "@/interfaces/message.interface";
 import { generateRandomNumber } from "@/utils/util";
 import verifyPhoneModel from "@/models/verifyPhone.model";
+import { DeleteCustomLink } from "@/dtos/guilds.dto";
 
 class GuildsService {
   public async getGuildData(req: RequestWithGuild): Promise<any> {
@@ -38,8 +39,10 @@ class GuildsService {
       ),
       icon: req.guild.icon,
       roles: req.guild.roles.cache,
-      tickets: (await ticketModel.find({guild_id: req.guild.id})).length,
-      verifys: (await verifyModel.find({guild_id: req.guild.id, status: "success"})).length,
+      tickets: (await ticketModel.find({ guild_id: req.guild.id })).length,
+      verifys: (
+        await verifyModel.find({ guild_id: req.guild.id, status: "success" })
+      ).length,
     };
   }
 
@@ -66,78 +69,134 @@ class GuildsService {
         color: role.color,
         name: role.name,
         members: role.members.size,
-      })
-    })
+      });
+    });
     return roles;
   }
 
   public async getGuildTickets(req: RequestWithGuild): Promise<any> {
-    const tickets = await ticketModel.find({guildId: req.guild.id})
+    const tickets = await ticketModel.find({ guildId: req.guild.id });
     return tickets;
   }
 
   public async getGuildVerifys(req: RequestWithGuild): Promise<any> {
-    const tickets = await verifyModel.find({guildId: req.guild.id})
+    const tickets = await verifyModel.find({ guildId: req.guild.id });
     return tickets;
   }
 
   public async setGuildCustomLink(req: RequestWithGuild): Promise<ResponseObj> {
-    if(req.body.type === "custom") {
-      if(!req.isPremium) throw new HttpException(400, req.t("customlink.onlyPremium"))
-      if(!req.body.path) throw new HttpException(400, req.t("customlink.inputUse"))
-      const isUseing = await customLinkSettingModel.findOne({ path: req.body.path });
-      if(isUseing && isUseing.guild_id !== req.guild.id) throw new HttpException(400, req.t("customlink.already"))
-      const customlinkDB = await customLinkSettingModel.findOne({guild_id: req.guild.id, type: "custom"});
-      if(!customlinkDB) {
-        const customLinkSetting = new customLinkSettingModel()
+    if (req.body.type === "custom") {
+      if (!req.isPremium)
+        throw new HttpException(400, req.t("customlink.onlyPremium"));
+      if (!req.body.path)
+        throw new HttpException(400, req.t("customlink.inputUse"));
+      const isUseing = await customLinkSettingModel.findOne({
+        path: req.body.path,
+      });
+      if (isUseing && isUseing.guild_id !== req.guild.id)
+        throw new HttpException(400, req.t("customlink.already"));
+      const customlinkDB = await customLinkSettingModel.findOne({
+        guild_id: req.guild.id,
+        type: "custom",
+      });
+      if (!customlinkDB) {
+        const customLinkSetting = new customLinkSettingModel();
         customLinkSetting.guild_id = req.guild.id;
         customLinkSetting.path = req.body.path;
+        customLinkSetting.option = req.body.option;
         customLinkSetting.type = "custom";
-        await customLinkSetting.save().catch(e => {
-          if(e) throw new HttpException(500, req.t("customlink.error"))
-        })
-        return { message: `${req.body.path}${req.t("customlink.setting")}`}
+        customLinkSetting.useage = 0
+        await customLinkSetting.save().catch((e) => {
+          if (e) throw new HttpException(500, req.t("customlink.error"));
+        });
+        return { message: `${req.body.path}${req.t("customlink.setting")}` };
       } else {
         await customlinkDB.updateOne({ $set: { path: req.body.path } });
-        return { message: `${req.body.path}${req.t("customlink.setting")}` }
+        return { message: `${req.body.path}${req.t("customlink.setting")}` };
       }
-    }
-    if(req.body.type === "random") {
-      return {message: "", data: ""}
+    } else if (req.body.type === "random") {
+      const path = randomstring.generate({ length: 8 });
+      const customLinkSetting = new customLinkSettingModel();
+      customLinkSetting.guild_id = req.guild.id;
+      customLinkSetting.path = path;
+      customLinkSetting.option = req.body.option;
+      customLinkSetting.type = "random";
+      customLinkSetting.useage = 0
+      await customLinkSetting.save().catch((e) => {
+        if (e) throw new HttpException(500, req.t("customlink.error"));
+      });
+      return { message: `${path}${req.t("customlink.setting")}` };
     }
   }
 
+  public async getGuildCustomLink(req: RequestWithGuild): Promise<any> {
+    const customlink = await customLinkSettingModel.findOne({
+      guild_id: req.guild.id,
+      type: "custom",
+    });
+    const randomlink = await customLinkSettingModel.find({
+      guild_id: req.guild.id,
+      type: "random",
+    });
+    return {
+      custom: customlink,
+      random: randomlink,
+    };
+  }
+
+  public async deleteGuildCustomLink(req: RequestWithGuild): Promise<any> {
+    const { path } = req.body as DeleteCustomLink
+    const deleteCount = await customLinkSettingModel.deleteMany({path: {$in: path}})
+    return {
+      count: deleteCount.deletedCount
+    };
+  }
+
   public async createTicket(req: RequestWithGuild): Promise<string> {
-    const channel = req.guild.channels.cache.get(req.body.channel)
-    const categori = req.guild.channels.cache.get(req.body.categori)
-    if(!channel || channel.type !== ChannelType.GuildText) throw new HttpException(404, req.t("ticket.notFoundChannel"))
-    if(!categori || categori.type !== ChannelType.GuildCategory) throw new HttpException(404, req.t("ticket.notFoundCategori"))
-    const ticketDB = await ticketSettingModel.findOne({guildId: req.guild.id})
+    const channel = req.guild.channels.cache.get(req.body.channel);
+    const categori = req.guild.channels.cache.get(req.body.categori);
+    if (!channel || channel.type !== ChannelType.GuildText)
+      throw new HttpException(404, req.t("ticket.notFoundChannel"));
+    if (!categori || categori.type !== ChannelType.GuildCategory)
+      throw new HttpException(404, req.t("ticket.notFoundCategori"));
+    const ticketDB = await ticketSettingModel.findOne({
+      guildId: req.guild.id,
+    });
     const embed = new EmbedBuilder()
       .setTitle(req.body.title)
       .setDescription(req.body.description)
-      .setColor(req.body.color ? req.body.color : '#2f3136')
+      .setColor(req.body.color ? req.body.color : "#2f3136");
     const button = new ButtonBuilder()
       .setLabel(req.body.button ? req.body.button : req.t("ticket.makeButton"))
       .setStyle(ButtonStyle.Primary)
-      .setEmoji(req.body.emoji ? req.body.emoji : '🎫')
-      .setCustomId('create')
-    const row = new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(button)
-    if(ticketDB) {
-      await ticketSettingModel.updateOne({guildId: req.guild.id}, {$set: {categories: categori.id}})
-      await channel.send({embeds: [embed], components: [row]})
-      return req.t("ticket.changeCategori", {categori: categori.name, channel: channel.name}) 
+      .setEmoji(req.body.emoji ? req.body.emoji : "🎫")
+      .setCustomId("create");
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+    if (ticketDB) {
+      await ticketSettingModel.updateOne(
+        { guildId: req.guild.id },
+        { $set: { categories: categori.id } }
+      );
+      await channel.send({ embeds: [embed], components: [row] });
+      return req.t("ticket.changeCategori", {
+        categori: categori.name,
+        channel: channel.name,
+      });
     } else {
-      const ticketSettingDB = new ticketSettingModel()
-      ticketSettingDB.guildId = req.guild.id
-      ticketSettingDB.categories = categori.id
-      const ticketSettingResult = await ticketSettingDB.save().then(() => {
-        return req.t("ticket.settingCategori", {categori: categori.name, channel: channel.name})
-      })
-      .catch((e) => {
-        if(e) return req.t("error")
-      })
+      const ticketSettingDB = new ticketSettingModel();
+      ticketSettingDB.guildId = req.guild.id;
+      ticketSettingDB.categories = categori.id;
+      const ticketSettingResult = await ticketSettingDB
+        .save()
+        .then(() => {
+          return req.t("ticket.settingCategori", {
+            categori: categori.name,
+            channel: channel.name,
+          });
+        })
+        .catch((e) => {
+          if (e) return req.t("error");
+        });
       return ticketSettingResult;
     }
   }
@@ -193,10 +252,11 @@ class GuildsService {
   }
 
   public async verifyPhone(req: RequestWithGuild): Promise<any> {
-    if(!req.isPremium) throw new HttpException(403, req.t("verifyPhone.onlyPremium"))
-    const user = await req.guild.members.fetch(req.body.userId)
-    if(!user) throw new HttpException(404, req.t("verifyPhone.notFoundUser"))
-    const verifyNumber = generateRandomNumber(5)
+    if (!req.isPremium)
+      throw new HttpException(403, req.t("verifyPhone.onlyPremium"));
+    const user = await req.guild.members.fetch(req.body.userId);
+    if (!user) throw new HttpException(404, req.t("verifyPhone.notFoundUser"));
+    const verifyNumber = generateRandomNumber(5);
     const verifyToken = randomstring.generate({ length: 25 });
     const verfiyPhoneDB = new verifyPhoneModel({
       user_id: user.id,
@@ -204,23 +264,27 @@ class GuildsService {
       verfiyKey: verifyNumber,
       status: "open",
       token: verifyToken,
-      phoneNumber: req.body.phoneNumber
-    })
+      phoneNumber: req.body.phoneNumber,
+    });
     await verfiyPhoneDB.save().catch(() => {
       throw new HttpException(500, req.t("dataSaveError"));
-    })
+    });
     try {
-      await sendMessage(req.body.phoneNumber, KAKAO_MESSAGE_TEMPLATE.VERIFY_MESSAGE, {
-        "#{이름}": user.user.username,
-        "#{인증번호}": verifyNumber
-      })
-    } catch(e) {
-      throw new HttpException(500, e.message)
+      await sendMessage(
+        req.body.phoneNumber,
+        KAKAO_MESSAGE_TEMPLATE.VERIFY_MESSAGE,
+        {
+          "#{이름}": user.user.username,
+          "#{인증번호}": verifyNumber,
+        }
+      );
+    } catch (e) {
+      throw new HttpException(500, e.message);
     }
     return {
       token: verifyToken,
-      phoneNumber: req.body.phoneNumber
-    }
+      phoneNumber: req.body.phoneNumber,
+    };
   }
 
   public async voteData(req: RequestWithGuild): Promise<string> {
@@ -277,7 +341,7 @@ class GuildsService {
     voteDB.save((err) => {
       if (err) throw new HttpException(500, req.t("vote.error"));
     });
-    return req.t("vote.settingChannel", {channel: voteChannel.name});
+    return req.t("vote.settingChannel", { channel: voteChannel.name });
   }
 }
 

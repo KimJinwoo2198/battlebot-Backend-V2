@@ -76,6 +76,24 @@ class GuildController {
     }
   };
 
+  public getCustomLink = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const customlink = await this.guildsService.getGuildCustomLink(req)
+      ResponseWrapper(req, res, {data: customlink})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public deleteCustomLink = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const customlink = await this.guildsService.deleteGuildCustomLink(req)
+      ResponseWrapper(req, res, {data: customlink})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public createTicket = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
     try {
       const createTicket = await this.guildsService.createTicket(req)
