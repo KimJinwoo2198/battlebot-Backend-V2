@@ -105,23 +105,29 @@ class GuildsService {
         customLinkSetting.path = req.body.path;
         customLinkSetting.option = req.body.option;
         customLinkSetting.type = "custom";
-        customLinkSetting.useage = 0
+        customLinkSetting.useage = 0;
         await customLinkSetting.save().catch((e) => {
           if (e) throw new HttpException(500, req.t("customlink.error"));
         });
         return { message: `${req.body.path}${req.t("customlink.setting")}` };
       } else {
-        await customlinkDB.updateOne({ $set: { path: req.body.path } });
+        await customlinkDB.updateOne({
+          $set: { path: req.body.path, option: req.body.option },
+        });
         return { message: `${req.body.path}${req.t("customlink.setting")}` };
       }
     } else if (req.body.type === "random") {
+      if (req.body.option) {
+        if (!req.isPremium)
+          throw new HttpException(400, req.t("customlink.onlyPremium"));
+      }
       const path = randomstring.generate({ length: 8 });
       const customLinkSetting = new customLinkSettingModel();
       customLinkSetting.guild_id = req.guild.id;
       customLinkSetting.path = path;
       customLinkSetting.option = req.body.option;
       customLinkSetting.type = "random";
-      customLinkSetting.useage = 0
+      customLinkSetting.useage = 0;
       await customLinkSetting.save().catch((e) => {
         if (e) throw new HttpException(500, req.t("customlink.error"));
       });
@@ -145,10 +151,12 @@ class GuildsService {
   }
 
   public async deleteGuildCustomLink(req: RequestWithGuild): Promise<any> {
-    const { path } = req.body as DeleteCustomLink
-    const deleteCount = await customLinkSettingModel.deleteMany({path: {$in: path}})
+    const { path } = req.body as DeleteCustomLink;
+    const deleteCount = await customLinkSettingModel.deleteMany({
+      path: { $in: path },
+    });
     return {
-      count: deleteCount.deletedCount
+      count: deleteCount.deletedCount,
     };
   }
 
