@@ -118,8 +118,10 @@ class GuildsService {
       }
     } else if (req.body.type === "random") {
       if (req.body.option) {
-        if (!req.isPremium)
-          throw new HttpException(400, req.t("customlink.onlyPremium"));
+        if (req.body.option !== "email") {
+          if (!req.isPremium)
+            throw new HttpException(400, req.t("customlink.onlyPremium"));
+        }
       }
       const path = randomstring.generate({ length: 8 });
       const customLinkSetting = new customLinkSettingModel();

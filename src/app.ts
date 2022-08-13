@@ -82,16 +82,12 @@ class App {
       .init({
         backend: {
           loadPath: __dirname + "/locales/{{lng}}/{{ns}}.json",
-          addPath: __dirname + "/locales/{{lng}}/{{ns}}.missing.json",
         },
         detection: {
-          order: ['querystring','header'],
-          lookupCookie: 'lang',
-          caches: ['cookie']
+          order: ['querystring','header']
         },
         fallbackLng: "ko",
         preload: ["en", "ko"],
-        saveMissing: true,
       });
     this.app.use(morgan(LOG_FORMAT, { stream }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));

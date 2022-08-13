@@ -1,65 +1,64 @@
 {
-    "hello": {
-      "world": "world"
-    },
-    "auth": {
-      "unauthorization": "User authentication failed.",
-      "unauthorizationRelogin": "User authentication failed Please logout and try again.",
-      "unknownUserToken": "Invalid user token.",
-      "notHaveManageServerPermission": "You do not have permission to manage this server.",
-      "notFoundAdminUseChatServer": "The administrator was not found. Please enter the chat on the server and try again.",
-      "notToken": "User token not found."
-    },
-    "customlink": {
-      "onlyPremium": "Custom Link function is only for Premium.",
-      "inputUse": "Please enter a custom link to use.",
-      "already": "Custom link already in use.",
-      "error": "An error occurred while setting the custom link.",
-      "setting": "is setting a custom link to the server."
-    },
-    "ticket": {
-      "notFoundChannel": "Unable to find the channel to create the Ticket.",
-      "notFoundCategori": "Unable to find the category to create the Ticket.",
-        "makeButton": "Create a Ticket",
-      "changeCategori": "Create a Ticket category in #__categori__ and Crate a Ticket in #__channel__.",
-      "settingCategori": "Create a Ticket category in #__categori__ and Crate a Ticket in #__channel__.",
-      "error": "An error occurred while saving the ticket settings."
-    },
-    "verifyPhone": {
-      "onlyPremium": "Phone Verify function is only for Premium.",
-      "notFoundUser": "Unable to find a user who is performing authentication."
-    },
-    "warning": {
-      "error": "An error occurred while adding an warn"
-    },
-    "vote": {
-      "notFoundChannel": "Couldn't find the channel for voting.",
-      "error": "An error occurred while setting the vote.",
-      "settingChannel": "Vote Message is Setting in #__channel__."
-    },
-    "payments": {
-      "notFoundOrder": "Order information not found.",
-      "alreadySuccessOrder": "The order information has already been processed.",
-      "notFoundPayments": "No such payment was found.",
-      "alreadySuccessPayments": "This payment has already been completed.",
-      "notFoundServer": "No servers were found to proceed with the purchase.",
-      "notFoundUser": "No users could be found to proceed with the purchase.",
-      "notFoundPaymentsServer": "The server where the payment was made could not be found.",
-      "notFoundPaymentsUser": "The user who proceeded with the payment could not be found."
-    },
-    "order": {
-      "error": "An error occurred while generating payment information.",
-        "notFoundItem": "We can't find this product."
-    },
-    "server": {
-      "notfound": "Server not found.",
-      "notfoundThat": "No such servers found."
-    },
-    "notFoundUser": "User not found.",
-    "notNeedParams": "Required parameters not found",
-    "tooManyRequest": "Too many requests Please try again in a minute.",
-    "unknownError": "An unknown error occurred.",
-    "successRequest": "Request executed successfully.",
-    "dataSaveError": "An error occurred while saving data."
-  }
-  
+  "hello": {
+    "world": "world"
+  },
+  "auth": {
+    "unauthorization": "User authentication failed.",
+    "unauthorizationRelogin": "User authentication failed Please logout and try again.",
+    "unknownUserToken": "Invalid user token.",
+    "notHaveManageServerPermission": "You do not have permission to manage this server.",
+    "notFoundAdminUseChatServer": "The administrator was not found. Please enter the chat on the server and try again.",
+    "notToken": "User token not found."
+  },
+  "customlink": {
+    "onlyPremium": "Custom Link function is only for Premium.",
+    "inputUse": "Please enter a custom link to use.",
+    "already": "Custom link already in use.",
+    "error": "An error occurred while setting the custom link.",
+    "setting": "is setting a custom link to the server."
+  },
+  "ticket": {
+    "notFoundChannel": "Unable to find the channel to create the Ticket.",
+    "notFoundCategori": "Unable to find the category to create the Ticket.",
+    "makeButton": "Create a Ticket",
+    "changeCategori": "Create a Ticket category in #{{categori}} and Crate a Ticket in #__channel__.",
+    "settingCategori": "Create a Ticket category in #{{categori}} and Crate a Ticket in #__channel__.",
+    "error": "An error occurred while saving the ticket settings."
+  },
+  "verifyPhone": {
+    "onlyPremium": "Phone Verify function is only for Premium.",
+    "notFoundUser": "Unable to find a user who is performing authentication."
+  },
+  "warning": {
+    "error": "An error occurred while adding an warn"
+  },
+  "vote": {
+    "notFoundChannel": "Couldn't find the channel for voting.",
+    "error": "An error occurred while setting the vote.",
+    "settingChannel": "Vote Message is Setting in #{{channel}}."
+  },
+  "payments": {
+    "notFoundOrder": "Order information not found.",
+    "alreadySuccessOrder": "The order information has already been processed.",
+    "notFoundPayments": "No such payment was found.",
+    "alreadySuccessPayments": "This payment has already been completed.",
+    "notFoundServer": "No servers were found to proceed with the purchase.",
+    "notFoundUser": "No users could be found to proceed with the purchase.",
+    "notFoundPaymentsServer": "The server where the payment was made could not be found.",
+    "notFoundPaymentsUser": "The user who proceeded with the payment could not be found."
+  },
+  "order": {
+    "error": "An error occurred while generating payment information.",
+    "notFoundItem": "We can't find this product."
+  },
+  "server": {
+    "notfound": "Server not found.",
+    "notfoundThat": "No such servers found."
+  },
+  "notFoundUser": "User not found.",
+  "notNeedParams": "Required parameters not found",
+  "tooManyRequest": "Too many requests Please try again in a minute.",
+  "unknownError": "An unknown error occurred.",
+  "successRequest": "Request executed successfully.",
+  "dataSaveError": "An error occurred while saving data."
+}

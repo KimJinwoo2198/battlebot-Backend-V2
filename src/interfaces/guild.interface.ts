@@ -33,20 +33,28 @@ export interface Vote {
 }
 
 export interface Verify {
-  guild_id: String;
-  user_id: String;
-  token: String;
-  status: String;
+  guild_id: string;
+  user_id: string;
+  token: string;
+  status: string;
   published_date: Date;
 }
 
+export interface VerifyEmail {
+  path: string,
+  userId: string,
+  token: string,
+  code: string,
+  status: "open" | "success"
+}
+
 export interface VerifyPhone {
-  guild_id: String;
-  user_id: String;
-  token: String;
-  status: String;
-  phoneNumber: String;
-  verfiyKey: String;
+  guild_id: string;
+  user_id: string;
+  token: string;
+  status: string;
+  phoneNumber: string;
+  verfiyKey: string;
   published_date: Date;
 }
 
@@ -86,7 +94,7 @@ export interface TicketSetting {
 export interface CustomLinkSetting {
   guild_id: string;
   path: string;
-  useage: Number;
+  useage: number;
   type: "custom" | "random";
   option: "kakao" | "phone" | "email"
   published_date: Date;

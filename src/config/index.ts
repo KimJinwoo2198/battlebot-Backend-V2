@@ -1,7 +1,7 @@
-import { config } from 'dotenv';
-config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
+import { config } from "dotenv";
+config({ path: `.env.${process.env.NODE_ENV || "development"}.local` });
 
-export const CREDENTIALS = process.env.CREDENTIALS === 'true';
+export const CREDENTIALS = process.env.CREDENTIALS === "true";
 export const {
   NODE_ENV,
   PORT,
@@ -25,5 +25,11 @@ export const {
   MESSAGE_API_FROM,
   MESSAGE_API_PFID,
   PAYMENTS_TOSS_SECRET_KEY,
-  PAYMENTS_TOSSPAYMENTS_SECRET_KEY
+  PAYMENTS_TOSSPAYMENTS_SECRET_KEY,
+  CAPTHCA_SECRET_KEY,
+  GOOGLE_MAIL_CLIENT_ID,
+  GOOGLE_MAIL_SECRET_KEY,
+  GOOGLE_MAIL_REDIRECT_URL,
+  GOOGLE_MAIL_REFRESH_TOKEN,
+  GOOGLE_MAIL_EMAIL
 } = process.env;
