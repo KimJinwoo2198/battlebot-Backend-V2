@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import ResponseWrapper from '@/utils/responseWrapper';
 import GuildsService from '@/services/guilds.service';
 import { RequestWithGuild } from '@/interfaces/guild.interface';
@@ -107,15 +107,6 @@ class GuildController {
     try {
       const memberWarning = await this.guildsService.addGuildMemberWarning(req)
       ResponseWrapper(req, res, {data: memberWarning})
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public guildVerifyPhone = async (req: RequestWithGuild, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const memberVerify = await this.guildsService.verifyPhone(req)
-      ResponseWrapper(req, res, {data: memberVerify})
     } catch (error) {
       next(error);
     }

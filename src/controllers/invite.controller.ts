@@ -16,6 +16,26 @@ class InviteController {
     }
   };
 
+  public verifyEmailToken = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const invite = await this.inviteService.verifyEmailToken(req)
+      ResponseWrapper(req, res, {data: invite})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public verifyPhoneToken = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const invite = await this.inviteService.verifyPhoneToken(req)
+      ResponseWrapper(req, res, {data: invite})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+
+
   public verifyEmail = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
       const invite = await this.inviteService.verifyEmail(req)
@@ -25,9 +45,9 @@ class InviteController {
     }
   };
 
-  public verifyEmailToken = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+  public guildVerifyPhone = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const invite = await this.inviteService.verifyEmailToken(req)
+      const invite = await this.inviteService.verifyPhone(req)
       ResponseWrapper(req, res, {data: invite})
     } catch (error) {
       next(error);

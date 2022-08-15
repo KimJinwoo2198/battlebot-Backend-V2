@@ -162,7 +162,7 @@ const mailSender = {
                           <tr>
                             <td align="center" valign="top" style="padding: 36px 24px;">
                               <a href="https://www.battlebot.kr/" style="display: inline-block;">
-                                <img src="https://cdn.discordapp.com/attachments/837264607944638486/840533589220917248/image0.png" alt="Logo" border="0" width="48" style="display: block; width: 40px; max-width: 40px; min-width: 40px;">
+                                <img src="https://cdn.discordapp.com/attachments/837264607944638486/840533589220917248/image0.png" border="0" width="48" style="display: block; width: 40px; max-width: 40px; min-width: 40px;">
                               </a>
                             </td>
                           </tr>

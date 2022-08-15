@@ -261,42 +261,6 @@ class GuildsService {
     return saveData;
   }
 
-  public async verifyPhone(req: RequestWithGuild): Promise<any> {
-    if (!req.isPremium)
-      throw new HttpException(403, req.t("verifyPhone.onlyPremium"));
-    const user = await req.guild.members.fetch(req.body.userId);
-    if (!user) throw new HttpException(404, req.t("verifyPhone.notFoundUser"));
-    const verifyNumber = generateRandomNumber(5);
-    const verifyToken = randomstring.generate({ length: 25 });
-    const verfiyPhoneDB = new verifyPhoneModel({
-      user_id: user.id,
-      guild_id: req.guild.id,
-      verfiyKey: verifyNumber,
-      status: "open",
-      token: verifyToken,
-      phoneNumber: req.body.phoneNumber,
-    });
-    await verfiyPhoneDB.save().catch(() => {
-      throw new HttpException(500, req.t("dataSaveError"));
-    });
-    try {
-      await sendMessage(
-        req.body.phoneNumber,
-        KAKAO_MESSAGE_TEMPLATE.VERIFY_MESSAGE,
-        {
-          "#{이름}": user.user.username,
-          "#{인증번호}": verifyNumber,
-        }
-      );
-    } catch (e) {
-      throw new HttpException(500, e.message);
-    }
-    return {
-      token: verifyToken,
-      phoneNumber: req.body.phoneNumber,
-    };
-  }
-
   public async voteData(req: RequestWithGuild): Promise<string> {
     const { channel, voteTitle, voteItems } = req.body;
     const voteChannel = req.guild.channels.cache.get(channel) as TextChannel;

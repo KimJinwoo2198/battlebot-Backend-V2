@@ -44,18 +44,19 @@ export interface VerifyEmail {
   path: string,
   userId: string,
   token: string,
-  code: string,
+  code: string
   status: "open" | "success"
+  published_date: Date,
 }
 
 export interface VerifyPhone {
-  guild_id: string;
-  user_id: string;
-  token: string;
-  status: string;
-  phoneNumber: string;
-  verfiyKey: string;
-  published_date: Date;
+  path: string,
+  userId: string,
+  token: string,
+  code: string
+  status: "open" | "success"
+  phone: string
+  published_date: Date,
 }
 
 export interface Warning {

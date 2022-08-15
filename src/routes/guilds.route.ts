@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
-import { authAdminMiddleware, authBotMiddleware } from '@middlewares/auth.middleware';
+import { authAdminMiddleware } from '@middlewares/auth.middleware';
 import GuildController from '@/controllers/guilds.controller';
 import validationMiddleware from '@middlewares/validation.middleware';
-import { CustomLink, DeleteCustomLink, Ticket, verifyPhone, Vote, Warning } from "@dtos/guilds.dto"
+import { CustomLink, DeleteCustomLink, Ticket, Vote, Warning } from "@dtos/guilds.dto"
 
 class GuildRoute implements Routes {
   public path = '/guilds';
@@ -23,7 +23,6 @@ class GuildRoute implements Routes {
     this.router.get(`${this.path}/:id/verifys`, authAdminMiddleware, this.guildsController.getGuildTickets);
     this.router.get(`${this.path}/:id/customlink`, authAdminMiddleware, this.guildsController.getCustomLink);
     this.router.get(`${this.path}/:id/members/:userId`, authAdminMiddleware, this.guildsController.getGuildMember);
-    this.router.post(`${this.path}/:id/verifyphone`, authBotMiddleware, validationMiddleware(verifyPhone, 'body'), this.guildsController.guildVerifyPhone);
     this.router.post(`${this.path}/:id/customlink`, authAdminMiddleware, validationMiddleware(CustomLink, 'body'), this.guildsController.setCustomLink);
     this.router.post(`${this.path}/:id/ticket/create`, authAdminMiddleware, validationMiddleware(Ticket, 'body'), this.guildsController.createTicket);
     this.router.post(`${this.path}/:id/members/:userId/warning`, authAdminMiddleware, validationMiddleware(Warning, 'body'), this.guildsController.addGuildMemberWarning);

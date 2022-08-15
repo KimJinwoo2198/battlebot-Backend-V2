@@ -65,13 +65,3 @@ export class Ticket {
   @IsOptional()
   public button: string;
 }
-
-export class verifyPhone {
-  @Matches(/(^02.{0}|^01.{1}|[0-9]{3})([0-9]+)([0-9]{4})/g, {
-    message: "\"01012341234\" 형식의 번호로 작성해주세요"
-  })
-  phoneNumber: string;
-
-  @IsString({message: "유저 정보는 필수 향목입니다"})
-  userId: string;
-}

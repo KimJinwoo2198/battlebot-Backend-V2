@@ -28,7 +28,7 @@ const sendMessage = async (
     });
   } else {
     if (
-      messageRecode.sendCount >= 2 &&
+      messageRecode.sendCount >= 3 &&
       (new Date().getTime() - messageRecode.lastSend.getTime()) /
         (60 * 60 * 1000) <=
         1

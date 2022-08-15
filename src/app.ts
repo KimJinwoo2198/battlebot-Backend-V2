@@ -24,6 +24,7 @@ import { client } from "@utils/discord";
 import i18next from "i18next";
 import i18nextMiddleware from "i18next-http-middleware";
 import Backend from "i18next-node-fs-backend";
+import { limiter } from "./middlewares/rateLimit.middleware";
 
 class App {
   public app: express.Application;
@@ -89,6 +90,7 @@ class App {
         fallbackLng: "ko",
         preload: ["en", "ko"],
       });
+    this.app.use(limiter)
     this.app.use(morgan(LOG_FORMAT, { stream }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
     this.app.use(hpp());

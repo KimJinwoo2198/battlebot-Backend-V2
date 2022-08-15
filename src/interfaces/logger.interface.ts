@@ -7,6 +7,7 @@ export interface Log {
   method: string;
   error?: any;
   request: String;
+  ip: string
   requestBody: Object,
   requestHeders: Object,
   requestCookies: Object,

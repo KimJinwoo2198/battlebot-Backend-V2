@@ -10,6 +10,7 @@ const loggerSchema: Schema = new Schema({
   requestBody: Object,
   requestHeders: Object,
   requestCookies: Object,
+  ip: String,
   published_date: { type: Date, default: Date.now },
 });
 

@@ -78,13 +78,14 @@ const loggerMiddleware = async (req: RequestWithUser, res: Response, next: NextF
     loggerSchema.requestCookies = req.cookies;
     loggerSchema.path = req.path;
     loggerSchema.method = req.method;
+    loggerSchema.ip = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].toString() as string : undefined
     loggerSchema.save((err) => {
-      if(err) new HttpException(401, 'Error Handler!');
+      if(err) new HttpException(500, 'Error Handler!');
     })
     req.requestId = requestId
     next();
   } catch (error) {
-    next(new HttpException(401, 'Error Handler!'));
+    next(new HttpException(500, 'Error Handler!'));
   }
 };
 
