@@ -117,6 +117,12 @@ class GuildsService {
         return { message: `${req.body.path}${req.t("customlink.setting")}` };
       }
     } else if (req.body.type === "random") {
+      const customlinks = await customLinkSettingModel.find({guild_id: req.guild.id, type: "random"})
+      if(!req.isPremium)  {
+        if(customlinks.length >= 15) throw new HttpException(400, req.t("customlink.premiumMax"));
+      } else {
+        if(customlinks.length >= 40) throw new HttpException(400, req.t("customlink.noPremiumMax"));
+      }
       if (req.body.option) {
         if (req.body.option !== "email") {
           if (!req.isPremium)

@@ -65,3 +65,13 @@ export class Ticket {
   @IsOptional()
   public button: string;
 }
+
+export class Automod {
+  @IsIn(["custom", "random"], {message: "올바른 커스텀 링크의 생성 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_ALLOW_TYPE } })
+  @IsString({message: "커스텀 링크의 생성 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_SELECT_TYPE }})
+  public type: string
+
+  @IsOptional()
+  @IsString({message: "타켓은 문자만 입력가능합니다", context: { errorCode: Error.IS_NOT_STRING }})
+  public target?: string
+}
