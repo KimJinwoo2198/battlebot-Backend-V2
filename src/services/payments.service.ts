@@ -159,18 +159,22 @@ class PaymentsService {
           : req.t("payments.error")
       );
     }
-    await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
+    if (!req.user.phone) {
+      await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
+    }
     await paymentsModel.updateOne(
       { orderId },
       { $set: { payment: orderCulturelandData.data, process: "success" } }
     );
-    await guildPremiumHanler(payments.target, payments.item, req.user.id);
+    if (payments.type == "guild") {
+      await guildPremiumHanler(payments.target, payments.item, req.user.id);
+    }
     const paymentsMeta = await this.getTossPaymentsMetadata(orderId, req);
     return paymentsMeta;
   }
 
   public async successOrderKakaopay(req: RequestWithUser): Promise<any> {
-    const { orderId, pg_token } = req.body as PaymentsKakaoPayApprove;
+    const { orderId, pg_token, phone } = req.body as PaymentsKakaoPayApprove;
     const payments = await paymentsModel.findOne({
       orderId: orderId,
     });
@@ -202,14 +206,19 @@ class PaymentsService {
           : req.t("payments.error")
       );
     }
+    if (!req.user.phone) {
+      await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
+    }
     await paymentsModel.updateOne(
       {
         orderId: orderId,
       },
       { $set: { kakaoPayments: approveKakaopayData.data, process: "success" } }
     );
+    if (payments.type == "guild") {
+      await guildPremiumHanler(payments.target, payments.item, req.user.id);
+    }
     const paymentsMeta = await this.getKakaoPaymentsMetadata(orderId, req);
-
     return paymentsMeta;
   }
 
@@ -234,10 +243,10 @@ class PaymentsService {
         total_amount: Number(amount),
         tax_free_amount: 0,
         approval_url:
-          FRONT_REDIRECT_URL + `/payments/kakaopay?orderId=${orderId}&phone=${phone}`,
-        cancel_url:
-          FRONT_REDIRECT_URL + `/payments/${orderId}`,
-        fail_url: FRONT_REDIRECT_URL + `/payments/kakaopay?orderId=${orderId}&phone=${phone}`,
+          FRONT_REDIRECT_URL +
+          `/payments/kakaopay?orderId=${orderId}&phone=${phone}`,
+        cancel_url: FRONT_REDIRECT_URL + `/payments/${orderId}`,
+        fail_url: FRONT_REDIRECT_URL + `/payments/${orderId}`,
       }),
       {
         "content-type": "application/x-www-form-urlencoded",
@@ -290,7 +299,8 @@ class PaymentsService {
     });
     if (!payments || req.user.id !== payments.userId)
       throw new HttpException(404, req.t("payments.notFoundPayments"));
-    if(payments.kakaoPayments) return await this.getKakaoPaymentsMetadata(req.params.orderId, req);
+    if (payments.kakaoPayments)
+      return await this.getKakaoPaymentsMetadata(req.params.orderId, req);
     const paymentsMeta = await this.getTossPaymentsMetadata(
       req.params.orderId,
       req
@@ -420,10 +430,12 @@ class PaymentsService {
       amount: payments.amount,
       payment: {
         balanceAmount: payments.kakaoPayments.amount.total,
-        method: payments.kakaoPayments.payment_method_type === "MONEY" ? "카카오페이 계좌" : "카카오페이 카드",
-        approvedAt: payments.kakaoPayments.approvedAt
-
-      }
+        method:
+          payments.kakaoPayments.payment_method_type === "MONEY"
+            ? "카카오페이 계좌"
+            : "카카오페이 카드",
+        approvedAt: payments.kakaoPayments.approvedAt,
+      },
     };
   }
 }

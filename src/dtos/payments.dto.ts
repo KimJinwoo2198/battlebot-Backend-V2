@@ -68,4 +68,7 @@ export class PaymentsKakaoPayApprove {
 
   @IsString()
   pg_token: string;
+
+  @IsString()
+  phone: string;
 }
