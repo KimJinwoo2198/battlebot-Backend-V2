@@ -45,7 +45,9 @@ export interface SellItems {
     secret: string;
     name: string;
     target: string;
-    payment: payment;
+    kakaoReadyPayments?: any;
+    kakaoPayments?: any;
+    payment?: payment;
   
     type: "guild" | "user";
   }

@@ -1,4 +1,4 @@
-import { PAYMENTS_TOSS_SECRET_KEY, PAYMENTS_TOSSPAYMENTS_SECRET_KEY } from "@/config";
+import { PAYMENTS_TOSS_SECRET_KEY, PAYMENTS_TOSSPAYMENTS_SECRET_KEY, PAYMENTS_KAKAOPAY_SECRET_KEY } from "@/config";
 import { RefreshToken } from "@/interfaces/payments.interface";
 import { User } from "@/interfaces/users.interface";
 import userModel from "@/models/users.model";
@@ -50,6 +50,39 @@ export const tossPaymentsClient = async (
         Authorization: auth ? "Bearer " + auth : "Basic " + Buffer.from(PAYMENTS_TOSSPAYMENTS_SECRET_KEY + ":", "utf-8").toString("base64"),
       },
       url: "https://api.tosspayments.com" + endpoints,
+      withCredentials: true,
+    });
+    return {
+      data: response.data,
+      error: false,
+      status: 200,
+      message: response.data.message,
+    };
+  } catch (response: any) {
+    return {
+      data: response.response.data,
+      status: response.response.status,
+      error: true,
+      message: response.response.data.message,
+    };
+  }
+};
+
+export const kakaoPaymentsClient = async (
+  method: Method = "GET",
+  endpoints: string,
+  data?: any,
+  headers?: any
+): Promise<Response> => {
+  try {
+    const response: AxiosResponse = await axios({
+      method,
+      data,
+      headers: {
+        Authorization: "KakaoAK " + PAYMENTS_KAKAOPAY_SECRET_KEY,
+        ...headers
+      },
+      url: "https://kapi.kakao.com" + endpoints,
       withCredentials: true,
     });
     return {

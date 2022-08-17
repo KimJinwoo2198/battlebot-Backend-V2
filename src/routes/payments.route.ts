@@ -3,7 +3,7 @@ import { Routes } from '@interfaces/routes.interface';
 import PaymentsController from '@/controllers/payments.controller';
 import authMiddleware from '@/middlewares/auth.middleware';
 import validationMiddleware from '@/middlewares/validation.middleware';
-import { confirmPayment, newPayments, PaymentsGift } from '@/dtos/payments.dto';
+import { confirmPayment, newPayments, PaymentsGift, PaymentsKakaoPay, PaymentsKakaoPayApprove } from '@/dtos/payments.dto';
 
 class PaymentsRoute implements Routes {
   public path = '/payments';
@@ -17,11 +17,13 @@ class PaymentsRoute implements Routes {
   private initializeRoutes() {
    this.router.get(`${this.path}/auth`, authMiddleware, this.paymentsController.getPaymentsAuth);
    this.router.get(`${this.path}/methods`, authMiddleware, this.paymentsController.getPaymentsMethods);
-   this.router.post(`${this.path}/confirm-payment`, authMiddleware, validationMiddleware(confirmPayment, 'body'), this.paymentsController.confirmPayment);
-   this.router.post(`${this.path}/order`, authMiddleware, validationMiddleware(newPayments, 'body'), this.paymentsController.addOrder);
    this.router.get(`${this.path}/order/:orderId`, authMiddleware, this.paymentsController.getOrder);
    this.router.get(`${this.path}/order/success/:orderId`, authMiddleware, this.paymentsController.getSuccessOrder);
+   this.router.post(`${this.path}/order`, authMiddleware, validationMiddleware(newPayments, 'body'), this.paymentsController.addOrder);
+   this.router.post(`${this.path}/confirm-payment`, authMiddleware, validationMiddleware(confirmPayment, 'body'), this.paymentsController.confirmPayment);
    this.router.post(`${this.path}/order/success/:orderId/gift`, authMiddleware, validationMiddleware(PaymentsGift, 'body'), this.paymentsController.getSuccessOrderCultureland);
+   this.router.post(`${this.path}/order/:orderId/kakaopay`, authMiddleware, validationMiddleware(PaymentsKakaoPay, 'body'), this.paymentsController.readyOrderKakaopay);
+   this.router.post(`${this.path}/order/success/:orderId/kakaopay`, authMiddleware, validationMiddleware(PaymentsKakaoPayApprove, 'body'), this.paymentsController.getSuccessOrderKakaopay);
   }
 }
 

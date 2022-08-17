@@ -1,19 +1,31 @@
-import { confirmPayment, newPayments, PaymentsGift } from "@/dtos/payments.dto";
+import {
+  confirmPayment,
+  newPayments,
+  PaymentsGift,
+  PaymentsKakaoPay,
+  PaymentsKakaoPayApprove,
+} from "@/dtos/payments.dto";
 import { HttpException } from "@/exceptions/HttpException";
 import { RequestWithUser } from "@/interfaces/auth.interface";
 import paymentsModel from "@/models/payments.model";
 import sellItemModel from "@/models/products.model";
 import userModel from "@/models/users.model";
 import { client } from "@/utils/discord";
-import { tossClient, tossPaymentsClient, tossRefreshToken } from "@/utils/toss";
+import {
+  kakaoPaymentsClient,
+  tossClient,
+  tossPaymentsClient,
+  tossRefreshToken,
+} from "@/utils/payments";
 import { randomUUID } from "crypto";
 import type { Methods } from "@tosspayments/brandpay-types";
 import { Payments, PaymentsMethods } from "@/interfaces/payments.interface";
 import { guildPremiumHanler } from "@/utils/premium";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import premiumUserModel from "@/models/premiumUser.model";
-import { Document } from "mongoose";
+import qs from "qs";
 import { Request } from "express";
+import { FRONT_REDIRECT_URL } from "@/config";
 
 class PaymentsService {
   public async getPayementsAuth(req: RequestWithUser): Promise<any> {
@@ -126,8 +138,10 @@ class PaymentsService {
     const payments = await paymentsModel.findOne({
       orderId: orderId,
     });
-    if (!payments) throw new HttpException(404, req.t("payments.notFoundOrder"));
-    if (payments.process === "success") throw new HttpException(409, req.t("payments.alreadySuccessOrder"));
+    if (!payments)
+      throw new HttpException(404, req.t("payments.notFoundOrder"));
+    if (payments.process === "success")
+      throw new HttpException(409, req.t("payments.alreadySuccessOrder"));
     const orderCulturelandData = await tossPaymentsClient(
       "POST",
       `/v1/payments/confirm`,
@@ -140,7 +154,9 @@ class PaymentsService {
     if (orderCulturelandData.error) {
       throw new HttpException(
         orderCulturelandData.status ? orderCulturelandData.status : 500,
-        orderCulturelandData.message ? orderCulturelandData.message : req.t("payments.error")
+        orderCulturelandData.message
+          ? orderCulturelandData.message
+          : req.t("payments.error")
       );
     }
     await userModel.updateOne({ id: req.user.id }, { $set: { phone } });
@@ -149,8 +165,99 @@ class PaymentsService {
       { $set: { payment: orderCulturelandData.data, process: "success" } }
     );
     await guildPremiumHanler(payments.target, payments.item, req.user.id);
-    const paymentsMeta = await this.getPaymentsMetadata(orderId, req)
+    const paymentsMeta = await this.getTossPaymentsMetadata(orderId, req);
     return paymentsMeta;
+  }
+
+  public async successOrderKakaopay(req: RequestWithUser): Promise<any> {
+    const { orderId, pg_token } = req.body as PaymentsKakaoPayApprove;
+    const payments = await paymentsModel.findOne({
+      orderId: orderId,
+    });
+    if (!payments)
+      throw new HttpException(404, req.t("payments.notFoundOrder"));
+    if (payments.process === "success")
+      throw new HttpException(409, req.t("payments.alreadySuccessOrder"));
+    if (!payments.kakaoReadyPayments.tid)
+      throw new HttpException(404, req.t("payments.notFoundOrder"));
+    const approveKakaopayData = await kakaoPaymentsClient(
+      "POST",
+      `/v1/payment/approve`,
+      qs.stringify({
+        cid: "TCSUBSCRIP",
+        partner_order_id: orderId,
+        partner_user_id: req.user.id,
+        tid: payments.kakaoReadyPayments.tid,
+        pg_token,
+      }),
+      {
+        "content-type": "application/x-www-form-urlencoded",
+      }
+    );
+    if (approveKakaopayData.error) {
+      throw new HttpException(
+        approveKakaopayData.status ? approveKakaopayData.status : 500,
+        approveKakaopayData.data.msg
+          ? approveKakaopayData.data.msg
+          : req.t("payments.error")
+      );
+    }
+    await paymentsModel.updateOne(
+      {
+        orderId: orderId,
+      },
+      { $set: { kakaoPayments: approveKakaopayData.data, process: "success" } }
+    );
+    const paymentsMeta = await this.getKakaoPaymentsMetadata(orderId, req);
+
+    return paymentsMeta;
+  }
+
+  public async readyOrderKakaopay(req: RequestWithUser): Promise<any> {
+    const { orderId, amount, phone } = req.body as PaymentsKakaoPay;
+    const payments = await paymentsModel.findOne({
+      orderId: orderId,
+    });
+    if (!payments)
+      throw new HttpException(404, req.t("payments.notFoundOrder"));
+    if (payments.process === "success")
+      throw new HttpException(409, req.t("payments.alreadySuccessOrder"));
+    const readyKakaopayData = await kakaoPaymentsClient(
+      "POST",
+      `/v1/payment/ready`,
+      qs.stringify({
+        cid: "TCSUBSCRIP",
+        partner_order_id: orderId,
+        partner_user_id: req.user.id,
+        item_name: payments.name,
+        quantity: 1,
+        total_amount: Number(amount),
+        tax_free_amount: 0,
+        approval_url:
+          FRONT_REDIRECT_URL + `/payments/kakaopay?orderId=${orderId}&phone=${phone}`,
+        cancel_url:
+          FRONT_REDIRECT_URL + `/payments/${orderId}`,
+        fail_url: FRONT_REDIRECT_URL + `/payments/kakaopay?orderId=${orderId}&phone=${phone}`,
+      }),
+      {
+        "content-type": "application/x-www-form-urlencoded",
+      }
+    );
+    if (readyKakaopayData.error) {
+      throw new HttpException(
+        readyKakaopayData.status ? readyKakaopayData.status : 500,
+        readyKakaopayData.data.msg
+          ? readyKakaopayData.data.msg
+          : req.t("payments.error")
+      );
+    }
+    await paymentsModel.updateOne(
+      {
+        orderId: orderId,
+      },
+      { $set: { kakaoReadyPayments: readyKakaopayData.data } }
+    );
+    return readyKakaopayData.data;
   }
 
   public async addNewOrder(req: RequestWithUser): Promise<any> {
@@ -183,7 +290,11 @@ class PaymentsService {
     });
     if (!payments || req.user.id !== payments.userId)
       throw new HttpException(404, req.t("payments.notFoundPayments"));
-    const paymentsMeta = await this.getPaymentsMetadata(req.params.orderId, req)
+    if(payments.kakaoPayments) return await this.getKakaoPaymentsMetadata(req.params.orderId, req);
+    const paymentsMeta = await this.getTossPaymentsMetadata(
+      req.params.orderId,
+      req
+    );
     return paymentsMeta;
   }
 
@@ -208,8 +319,7 @@ class PaymentsService {
       };
     } else if (payments.type === "user") {
       const user = client.users.cache.get(payments.target);
-      if (!user)
-        throw new HttpException(404, req.t("payments.notFoundUser"));
+      if (!user) throw new HttpException(404, req.t("payments.notFoundUser"));
       itemMetadata = {
         type: "user",
         id: user.id,
@@ -226,7 +336,10 @@ class PaymentsService {
     };
   }
 
-  private async getPaymentsMetadata(orderId: string, req: Request): Promise<any> {
+  private async getTossPaymentsMetadata(
+    orderId: string,
+    req: Request
+  ): Promise<any> {
     const payments = await paymentsModel.findOne({ orderId });
     let itemMetadata;
     let nextPayDate: Date;
@@ -262,7 +375,56 @@ class PaymentsService {
       metadata: itemMetadata,
       nextPayDate,
       ...payments.toJSON(),
+    };
+  }
+
+  private async getKakaoPaymentsMetadata(
+    orderId: string,
+    req: Request
+  ): Promise<any> {
+    const payments = await paymentsModel.findOne({ orderId });
+    let itemMetadata;
+    let nextPayDate: Date;
+    if (payments.type === "guild") {
+      const guild = client.guilds.cache.get(payments.target);
+      if (!guild)
+        throw new HttpException(404, req.t("payments.notFoundPaymentsServer"));
+      itemMetadata = {
+        type: "guild",
+        id: guild.id,
+        icon: guild.icon,
+        name: guild.name,
+      };
+      const guildPremium = await premiumGuildModel.findOne({
+        guild_id: guild.id,
+      });
+      nextPayDate = guildPremium.nextpay_date;
+    } else if (payments.type === "user") {
+      const user = client.users.cache.get(payments.target);
+      if (!user)
+        throw new HttpException(404, req.t("payments.notFoundPaymentsUser"));
+      itemMetadata = {
+        type: "user",
+        id: user.id,
+        avatar: user.avatar,
+        discriminator: user.discriminator,
+        name: user.username,
+      };
+      const userPremium = await premiumUserModel.findOne({ user_id: user.id });
+      nextPayDate = userPremium.nextpay_date;
     }
+    return {
+      metadata: itemMetadata,
+      nextPayDate,
+      name: payments.name,
+      amount: payments.amount,
+      payment: {
+        balanceAmount: payments.kakaoPayments.amount.total,
+        method: payments.kakaoPayments.payment_method_type === "MONEY" ? "카카오페이 계좌" : "카카오페이 카드",
+        approvedAt: payments.kakaoPayments.approvedAt
+
+      }
+    };
   }
 }
 

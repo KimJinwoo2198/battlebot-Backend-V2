@@ -42,6 +42,24 @@ class PaymentsController {
     }
   };
 
+  public readyOrderKakaopay = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const readyOrderKakaopay = await this.paymentsService.readyOrderKakaopay(req)
+      ResponseWrapper(req, res, {data: readyOrderKakaopay})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getSuccessOrderKakaopay = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const successOrderKakaopay = await this.paymentsService.successOrderKakaopay(req)
+      ResponseWrapper(req, res, {data: successOrderKakaopay})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getPaymentsAuth = async(req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const getPayementsAuth = await this.paymentsService.getPayementsAuth(req)

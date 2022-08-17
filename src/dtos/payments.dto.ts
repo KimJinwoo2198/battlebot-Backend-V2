@@ -50,3 +50,22 @@ export class PaymentsGift {
   @IsString()
   phone: string;
 }
+
+export class PaymentsKakaoPay {
+  @IsString()
+  orderId: string;
+
+  @IsString()
+  amount: string;
+
+  @IsString()
+  phone: string;
+}
+
+export class PaymentsKakaoPayApprove {
+  @IsString()
+  orderId: string;
+
+  @IsString()
+  pg_token: string;
+}
