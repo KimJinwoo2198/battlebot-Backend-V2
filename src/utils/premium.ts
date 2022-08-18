@@ -79,12 +79,13 @@ export const guildPremiumHanler = async (
         }서버의 배틀이 프리미엄이 활성화 되었습니다\n다음 결제 예정일은 ${DateTime(
           expiredDate
         )} 입니다`
-      );
+      )
+      .setColor("Green");
     await discordUser.send({ embeds: [embed] });
   } catch (e) {
     throw new Error(e.message);
   }
-  premiumCache.del(guildId)
+  premiumCache.del(guildId);
 };
 
 export const premiumGuildCheck = async (guild: string): Promise<boolean> => {
@@ -108,6 +109,26 @@ export const premiumGuildCheck = async (guild: string): Promise<boolean> => {
       }
     }
   } else {
-    return premiumCache.get(guild)
+    return premiumCache.get(guild);
+  }
+};
+
+export const guildPremiumErrorHanler = async (
+  guildId: string,
+  userId: string,
+  reason: string
+) => {
+  const discordUser = await client.users.fetch(userId);
+  try {
+    const guild = client.guilds.cache.get(guildId);
+    const embed = new EmbedBuilder()
+      .setTitle("배틀이 프리미엄")
+      .setDescription(
+        `${guild.name}서버의 배틀이 프리미엄이 \`${reason}\`으로 연장에 실패했습니다\n내일 재결제 예정입니다`
+      )
+      .setColor("Red");
+    await discordUser.send({ embeds: [embed] });
+  } catch (e) {
+    throw new Error(e.message);
   }
 };

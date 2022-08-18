@@ -33,7 +33,25 @@ export interface SellItems {
     type: "guild" | "user";
     published_date: Date;
   }
-  
+
+  export interface Billings {
+    itemId: string,
+    method: string,
+    paymentsType: "kakaopay" | "tosspayments",
+    target: string,
+    type: string,
+    targetType: string,
+    useing: boolean,
+    userId: string,
+    published_date: Date;
+  }
+
+  export interface TossMethods {
+    userId: string,
+    methodId: string,
+    methodKey: string,
+  }
+
   export interface Payments {
     _id: mongoTypes.ObjectId;
     userId: string;
@@ -41,14 +59,14 @@ export interface SellItems {
     item: string;
     phone: string;
     amount: string;
-    process: "open" | "pending" | "success";
+    process: "open" | "pending" | "success" | "error";
     secret: string;
     name: string;
     target: string;
     kakaoReadyPayments?: any;
     kakaoPayments?: any;
     payment?: payment;
-  
+    errors?: any[]
     type: "guild" | "user";
   }
   

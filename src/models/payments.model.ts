@@ -15,6 +15,7 @@ const paymentsSchema: Schema = new Schema({
     kakaoReadyPayments: Object,
     kakaoPayments: Object,
     item: String,
+    paymentsErrors: [Object],
     published_date: { type: Date, default: Date.now },
 });
 

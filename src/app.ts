@@ -24,6 +24,7 @@ import { client } from "@utils/discord";
 import i18next from "i18next";
 import i18nextMiddleware from "i18next-http-middleware";
 import Backend from "i18next-node-fs-backend";
+import { billingSchedule } from "./utils/schedules"
 import { limiter } from "./middlewares/rateLimit.middleware";
 
 class App {
@@ -42,6 +43,7 @@ class App {
     this.initializeSwagger();
     this.initializeErrorHandling();
     this.connectToDiscord();
+    this.initializeSchedule();
   }
 
   public listen() {
@@ -127,6 +129,10 @@ class App {
 
   private initializeErrorHandling() {
     this.app.use(errorMiddleware);
+  }
+
+  private initializeSchedule() {
+    billingSchedule()
   }
 }
 

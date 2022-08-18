@@ -18,14 +18,20 @@ import {
   tossRefreshToken,
 } from "@/utils/payments";
 import { randomUUID } from "crypto";
-import type { Methods } from "@tosspayments/brandpay-types";
+import type {
+  AccountMethod,
+  CardMethod,
+  Methods,
+} from "@tosspayments/brandpay-types";
 import { Payments, PaymentsMethods } from "@/interfaces/payments.interface";
-import { guildPremiumHanler } from "@/utils/premium";
+import { guildPremiumHanler, premiumGuildCheck } from "@/utils/premium";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import premiumUserModel from "@/models/premiumUser.model";
 import qs from "qs";
 import { Request } from "express";
 import { FRONT_REDIRECT_URL } from "@/config";
+import billingsModel from "@/models/billings.model";
+import paymentsTossMethodsModel from "@/models/tossmethods.model";
 
 class PaymentsService {
   public async getPayementsAuth(req: RequestWithUser): Promise<any> {
@@ -88,32 +94,65 @@ class PaymentsService {
       );
     const methodsData: Methods = tossMethodsData.data;
     const methods: PaymentsMethods[] = [];
-    methodsData.accounts.forEach((account) => {
-      return methods.push({
-        type: "account",
-        accountName: account.accountName,
-        accountNumber: account.accountNumber,
-        id: account.id,
-        iconUrl: account.iconUrl,
-        select: methodsData.selectedMethodId === account.id ? true : false,
-      });
-    });
-    methodsData.cards.forEach((card) => {
-      return methods.push({
-        type: "card",
-        cardName: card.cardName,
-        cardNumber: card.cardNumber,
-        cardType: card.cardType,
-        id: card.id,
-        iconUrl: card.iconUrl,
-        select: methodsData.selectedMethodId === card.id ? true : false,
-      });
-    });
+    await Promise.all(
+      methodsData.accounts.map(
+        async (account: AccountMethod & { methodKey: string }) => {
+          const paymentsTossMethod = await paymentsTossMethodsModel.findOne({
+            userId: req.user.id,
+            methodId: account.id,
+          });
+          if (!paymentsTossMethod) {
+            const aymentsTossMethodDB = new paymentsTossMethodsModel({
+              userId: req.user.id,
+              methodId: account.id,
+              methodKey: account.methodKey,
+            });
+            await aymentsTossMethodDB.save();
+          }
+          return methods.push({
+            type: "account",
+            accountName: account.accountName,
+            accountNumber: account.accountNumber,
+            id: account.id,
+            iconUrl: account.iconUrl,
+            select: methodsData.selectedMethodId === account.id ? true : false,
+          });
+        }
+      )
+    );
+    await Promise.all(
+      methodsData.cards.map(
+        async (card: CardMethod & { methodKey: string }) => {
+          const paymentsTossMethod = await paymentsTossMethodsModel.findOne({
+            userId: req.user.id,
+            methodId: card.id,
+          });
+          if (!paymentsTossMethod) {
+            const aymentsTossMethodDB = new paymentsTossMethodsModel({
+              userId: req.user.id,
+              methodId: card.id,
+              methodKey: card.methodKey,
+            });
+            await aymentsTossMethodDB.save();
+          }
+          return methods.push({
+            type: "card",
+            cardName: card.cardName,
+            cardNumber: card.cardNumber,
+            cardType: card.cardType,
+            id: card.id,
+            iconUrl: card.iconUrl,
+            select: methodsData.selectedMethodId === card.id ? true : false,
+          });
+        }
+      )
+    );
     return methods;
   }
 
   public async confirmPayment(req: RequestWithUser): Promise<any> {
-    const { amount, orderId, paymentKey, phone } = req.body as confirmPayment;
+    const { amount, orderId, paymentKey, phone, methodId } =
+      req.body as confirmPayment;
     const confirmData = await tossClient("POST", `/v1/payments/${paymentKey}`, {
       orderId,
       amount,
@@ -129,7 +168,11 @@ class PaymentsService {
       { orderId },
       { $set: { payment: confirmData.data, process: "success" } }
     );
-    await guildPremiumHanler(payments.target, payments.item, req.user.id);
+    if (payments.type === "guild") {
+      await guildPremiumHanler(payments.target, payments.item, req.user.id);
+    }
+    const method = await paymentsTossMethodsModel.findOne({userId: req.user.id, methodId})
+    await this.updateBilling(orderId, req, "tosspayments", method.methodKey);
     return confirmData.data;
   }
 
@@ -218,6 +261,12 @@ class PaymentsService {
     if (payments.type == "guild") {
       await guildPremiumHanler(payments.target, payments.item, req.user.id);
     }
+    await this.updateBilling(
+      orderId,
+      req,
+      "kakaopay",
+      approveKakaopayData.data.sid
+    );
     const paymentsMeta = await this.getKakaoPaymentsMetadata(orderId, req);
     return paymentsMeta;
   }
@@ -273,6 +322,12 @@ class PaymentsService {
     const paymentsReq: newPayments = req.body;
     const user = req.user;
     const orderId = randomUUID();
+    const isPremium = await premiumGuildCheck(paymentsReq.guildId);
+    if (isPremium)
+      throw new HttpException(
+        404,
+        "이미 프리미엄을 사용중인 서버입니다 (우측상단 유저 메뉴 > 결제) 페이지에서 수정해주세요"
+      );
     const item = await sellItemModel.findOne({ itemId: paymentsReq.itemId });
     if (!item) throw new HttpException(404, req.t("order.notFoundItem"));
     const paymentsDB = new paymentsModel({
@@ -437,6 +492,36 @@ class PaymentsService {
         approvedAt: payments.kakaoPayments.approvedAt,
       },
     };
+  }
+
+  private async updateBilling(
+    orderId: string,
+    req: RequestWithUser,
+    type: "kakaopay" | "tosspayments",
+    method: string
+  ): Promise<any> {
+    const order = await paymentsModel.findOne({ orderId });
+    const billing = await billingsModel.findOne({ target: order.target });
+    if (!billing) {
+      const billingDB = new billingsModel({
+        itemId: order.item,
+        userId: req.user.id,
+        target: order.target,
+        targetType: order.type,
+        paymentsType: type,
+        useing: true,
+        method,
+      });
+      await billingDB.save().catch((e) => {
+        console.log(e);
+        throw new Error("데이터 저장중 오류가 발생했습니다");
+      });
+    } else {
+      await billingsModel.updateOne(
+        { target: order.target },
+        { $set: { useing: true } }
+      );
+    }
   }
 }
 
