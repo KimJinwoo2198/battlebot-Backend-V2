@@ -169,7 +169,10 @@ class PaymentsService {
       { $set: { payment: confirmData.data, process: "success" } }
     );
     if (payments.type === "guild") {
-      await guildPremiumHanler(payments.target, payments.item, req.user.id);
+      await guildPremiumHanler(payments.target, payments.item, req.user.id, {
+        amount: confirmData.data.totalAmount,
+        method: confirmData.data.method
+      });
     }
     const method = await paymentsTossMethodsModel.findOne({userId: req.user.id, methodId})
     await this.updateBilling(orderId, req, "tosspayments", method.methodKey);
@@ -210,7 +213,10 @@ class PaymentsService {
       { $set: { payment: orderCulturelandData.data, process: "success" } }
     );
     if (payments.type == "guild") {
-      await guildPremiumHanler(payments.target, payments.item, req.user.id);
+      await guildPremiumHanler(payments.target, payments.item, req.user.id, {
+        amount: orderCulturelandData.data.totalAmount,
+        method: orderCulturelandData.data.method
+      });
     }
     const paymentsMeta = await this.getTossPaymentsMetadata(orderId, req);
     return paymentsMeta;
@@ -259,7 +265,10 @@ class PaymentsService {
       { $set: { kakaoPayments: approveKakaopayData.data, process: "success" } }
     );
     if (payments.type == "guild") {
-      await guildPremiumHanler(payments.target, payments.item, req.user.id);
+      await guildPremiumHanler(payments.target, payments.item, req.user.id, {
+        amount: approveKakaopayData.data.amount.total,
+        method: approveKakaopayData.data.payment_method_type === "CARD" ? "카카오페이 카드" : "카카오페이 계좌"
+      });
     }
     await this.updateBilling(
       orderId,

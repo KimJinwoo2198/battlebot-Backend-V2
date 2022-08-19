@@ -1,4 +1,5 @@
 import { Error } from '@/interfaces/error.interface';
+import { automodEvents } from '@/interfaces/guild.interface';
 import { ContainsEmoji } from '@/utils/customValidation';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsHexColor, IsIn, IsOptional, IsPhoneNumber, IsString, Matches, Validate } from 'class-validator';
 
@@ -41,6 +42,11 @@ export class DeleteCustomLink {
   public path: string[]
 }
 
+export class DeleteAutomod {
+  @IsArray({message: "삭제 향목은 Array 형식이여야 합니다", context: { errorCode: Error.IS_NOT_ARRAY }})
+  public id: string[]
+}
+
 export class Ticket {
   @IsString({message: "티켓 채널을 선택해주세요", context: { errorCode: Error.IS_NOT_SELECT_CHANNEL }})
   public channel: string;
@@ -67,11 +73,11 @@ export class Ticket {
 }
 
 export class Automod {
-  @IsIn(["custom", "random"], {message: "올바른 커스텀 링크의 생성 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_ALLOW_TYPE } })
-  @IsString({message: "커스텀 링크의 생성 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_SELECT_TYPE }})
-  public type: string
+  @IsIn(["resetchannel", "blacklist_ban", "usercreateat", "usecurse", "uselink", "autorole"], {message: "올바른 커스텀 링크의 생성 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_ALLOW_TYPE } })
+  @IsString({message: "자동관리의 생성 타입을 입력해주세요", context: { errorCode: Error.IS_NOT_SELECT_TYPE }})
+  public event: automodEvents
 
   @IsOptional()
-  @IsString({message: "타켓은 문자만 입력가능합니다", context: { errorCode: Error.IS_NOT_STRING }})
-  public target?: string
+  @IsString({message: "실행할 이벤트는 문자만 입력가능합니다", context: { errorCode: Error.IS_NOT_STRING }})
+  public start?: string
 }

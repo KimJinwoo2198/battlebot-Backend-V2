@@ -3,13 +3,19 @@ import { Embed, Guild } from "discord.js";
 import { Types as mongoTypes } from "mongoose";
 export interface RequestWithGuild extends RequestWithUser {
   guild: Guild;
-  isAdmin: Boolean;
-  isPremium: Boolean;
+  isAdmin: boolean;
+  isPremium: boolean;
 }
 export interface premiumGuild {
   guild_id: string;
   nextpay_date: Date;
   published_date: Date;
+}
+
+export interface automod {
+  guildId: string;
+  event: automodEvents;
+  start: string;
 }
 
 export interface premiumUser {
@@ -41,22 +47,22 @@ export interface Verify {
 }
 
 export interface VerifyEmail {
-  path: string,
-  userId: string,
-  token: string,
-  code: string
-  status: "open" | "success"
-  published_date: Date,
+  path: string;
+  userId: string;
+  token: string;
+  code: string;
+  status: "open" | "success";
+  published_date: Date;
 }
 
 export interface VerifyPhone {
-  path: string,
-  userId: string,
-  token: string,
-  code: string
-  status: "open" | "success"
-  phone: string
-  published_date: Date,
+  path: string;
+  userId: string;
+  token: string;
+  code: string;
+  status: "open" | "success";
+  phone: string;
+  published_date: Date;
 }
 
 export interface Warning {
@@ -97,8 +103,9 @@ export interface CustomLinkSetting {
   path: string;
   useage: number;
   type: "custom" | "random";
-  option: "kakao" | "phone" | "email"
+  option: "kakao" | "phone" | "email";
   published_date: Date;
 }
 
 export type voteStatus = "open" | "close";
+export type automodEvents = "resetchannel" | "blacklist_ban" | "usercreateat" | "usecurse" | "uselink" | "autorole"

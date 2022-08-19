@@ -80,7 +80,10 @@ export const billingSchedule = () =>
             await guildPremiumHanler(
               payments.target,
               payments.item,
-              billing.userId
+              billing.userId, {
+                amount: tosspayments.data.totalAmount,
+                method: tosspayments.data.method
+              }
             );
           } else if (billing.paymentsType === "kakaopay") {
             const kakaopay = await kakaoPaymentsClient(
@@ -130,7 +133,10 @@ export const billingSchedule = () =>
             await guildPremiumHanler(
               payments.target,
               payments.item,
-              billing.userId
+              billing.userId, {
+                amount: kakaopay.data.amount.total,
+                method: kakaopay.data.payment_method_type === "CARD" ? "카카오페이 카드" : "카카오페이 계좌"
+              }
             );
           }
         }

@@ -1,5 +1,6 @@
 import { NODE_ENV } from "@/config";
 import { KAKAO_MESSAGE_TEMPLATE } from "@/interfaces/message.interface";
+import mailSender from "@/libs/email/mail";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import productsModel from "@/models/products.model";
 import userModel from "@/models/users.model";
@@ -12,10 +13,15 @@ import { DateTime } from "./util";
 export const guildPremiumHanler = async (
   guildId: string,
   itemId: string,
-  userId: string
+  userId: string,
+  payments: {
+    method: string,
+    amount: string,
+  }
 ) => {
   const user = await userModel.findOne({ id: userId });
   const discordUser = await client.users.fetch(userId);
+  const guild = client.guilds.cache.get(guildId);
   const product = await productsModel.findOne({ itemId });
   if (!product) throw new Error("해당 상품은 찾을 수 없습니다");
   const premiumGuild = await premiumGuildModel.findOne({ guild_id: guildId });
@@ -66,11 +72,10 @@ export const guildPremiumHanler = async (
         "#{이름}": discordUser.username,
       });
     } catch (e) {
-      throw new Error(e.message);
+      console.log(e)
     }
   }
   try {
-    const guild = client.guilds.cache.get(guildId);
     const embed = new EmbedBuilder()
       .setTitle("배틀이 프리미엄")
       .setDescription(
@@ -83,7 +88,22 @@ export const guildPremiumHanler = async (
       .setColor("Green");
     await discordUser.send({ embeds: [embed] });
   } catch (e) {
-    throw new Error(e.message);
+    console.log(e)
+  }
+  try {
+    await mailSender.sendMail({
+      email: user.email,
+      data: {
+        serverName: guild.name,
+        nextPayDate: DateTime(expiredDate),
+        method: payments.method,
+        amount: payments.amount
+      },
+      title: `[배틀이 페이] ${discordUser.username}님, ${guild.name}서버의 프리미엄 결제가 완료되었어요`,
+      template: "successOrder"
+    })
+  } catch(e) {
+    console.log(e)
   }
   premiumCache.del(guildId);
 };

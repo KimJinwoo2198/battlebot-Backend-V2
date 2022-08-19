@@ -19,11 +19,9 @@ import ticketSettingModel from "@/models/ticketSetting.model";
 import { ResponseObj } from "@/interfaces/routes.interface";
 import customLinkSettingModel from "@/models/customLinkSetting.model";
 import verifyModel from "@/models/verify.model";
-import sendMessage from "@/utils/message";
-import { KAKAO_MESSAGE_TEMPLATE } from "@/interfaces/message.interface";
-import { generateRandomNumber } from "@/utils/util";
-import verifyPhoneModel from "@/models/verifyPhone.model";
-import { DeleteCustomLink } from "@/dtos/guilds.dto";
+import { Automod, DeleteAutomod, DeleteCustomLink } from "@/dtos/guilds.dto";
+import automodModel from "@/models/automod.model";
+import { ObjectId } from "mongodb";
 
 class GuildsService {
   public async getGuildData(req: RequestWithGuild): Promise<any> {
@@ -84,6 +82,79 @@ class GuildsService {
     return tickets;
   }
 
+  public async setGuildAutomod(req: RequestWithGuild): Promise<any> {
+    const { event, start } = req.body as Automod;
+    const automods = await automodModel.find({
+      guildId: req.guild.id,
+    });
+    if (!req.isPremium) {
+      if (automods.length >= 5)
+        throw new HttpException(400, req.t("automod.premiumMax"));
+    } else {
+      if (automods.length >= 15)
+        throw new HttpException(400, req.t("automod.noPremiumMax"));
+    }
+    if (event === "autorole") {
+      const role = req.guild.roles.cache.get(start);
+      if (!role) throw new HttpException(404, "지급할 역할을 찾을 수 없습니다");
+      const automodRoleDB = new automodModel({
+        guildId: req.guild.id,
+        event,
+        start: role.id,
+      });
+      await automodRoleDB.save();
+    } else if (event === "blacklist_ban") {
+      const automodBlacklistDB = new automodModel({
+        guildId: req.guild.id,
+        event,
+        start: true,
+      });
+      await automodBlacklistDB.save();
+    } else if (event === "resetchannel") {
+      const channel = req.guild.channels.cache.get(start);
+      if (!channel)
+        throw new HttpException(404, "초기화를 진행할 채널을 찾을 수 없습니다");
+      const automodResetchannelDB = new automodModel({
+        guildId: req.guild.id,
+        event,
+        start: channel.id,
+      });
+      await automodResetchannelDB.save();
+    } else if (event === "usecurse" || "uselink") {
+      const automodChatDB = new automodModel({
+        guildId: req.guild.id,
+        event,
+        start,
+      });
+      await automodChatDB.save();
+    } else if (event === "usercreateat") {
+      if (!req.isPremium)
+        throw new HttpException(
+          403,
+          "유저 생성일 제한 기능은 프리미엄 전용 기능입니다"
+        );
+      if (typeof start === "number")
+        throw new HttpException(
+          400,
+          "유저 생성일 제한일은 숫자만 입력해주세요"
+        );
+      const automodCreateatDB = new automodModel({
+        guildId: req.guild.id,
+        event,
+        start,
+      });
+      await automodCreateatDB.save();
+    } else {
+      throw new HttpException(404, "찾을 수 없는 이벤트입니다");
+    }
+    return null;
+  }
+
+  public async getGuildAutomod(req: RequestWithGuild): Promise<any> {
+    const automods = await automodModel.find({ guildId: req.guild.id });
+    return automods;
+  }
+
   public async setGuildCustomLink(req: RequestWithGuild): Promise<ResponseObj> {
     if (req.body.type === "custom") {
       if (!req.isPremium)
@@ -117,11 +188,16 @@ class GuildsService {
         return { message: `${req.body.path}${req.t("customlink.setting")}` };
       }
     } else if (req.body.type === "random") {
-      const customlinks = await customLinkSettingModel.find({guild_id: req.guild.id, type: "random"})
-      if(!req.isPremium)  {
-        if(customlinks.length >= 15) throw new HttpException(400, req.t("customlink.premiumMax"));
+      const customlinks = await customLinkSettingModel.find({
+        guild_id: req.guild.id,
+        type: "random",
+      });
+      if (!req.isPremium) {
+        if (customlinks.length >= 15)
+          throw new HttpException(400, req.t("customlink.premiumMax"));
       } else {
-        if(customlinks.length >= 40) throw new HttpException(400, req.t("customlink.noPremiumMax"));
+        if (customlinks.length >= 40)
+          throw new HttpException(400, req.t("customlink.noPremiumMax"));
       }
       if (req.body.option) {
         if (req.body.option !== "email") {
@@ -162,6 +238,17 @@ class GuildsService {
     const { path } = req.body as DeleteCustomLink;
     const deleteCount = await customLinkSettingModel.deleteMany({
       path: { $in: path },
+    });
+    return {
+      count: deleteCount.deletedCount,
+    };
+  }
+
+  public async deleteGuildAutomod(req: RequestWithGuild): Promise<any> {
+    const { id } = req.body as DeleteAutomod;
+
+    const deleteCount = await automodModel.deleteMany({
+      _id: { $in: id },
     });
     return {
       count: deleteCount.deletedCount,
