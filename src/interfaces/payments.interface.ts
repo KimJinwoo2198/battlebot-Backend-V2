@@ -30,17 +30,17 @@ export interface SellItems {
     itemDescription: string;
     plan: "month" | "year"
     itemFunctions: string[];
-    type: "guild" | "user";
+    type: targetType;
     published_date: Date;
   }
 
   export interface Billings {
     itemId: string,
     method: string,
-    paymentsType: "kakaopay" | "tosspayments",
+    paymentsType: paymentsType,
     target: string,
     type: string,
-    targetType: string,
+    targetType: targetType,
     useing: boolean,
     userId: string,
     published_date: Date;
@@ -67,7 +67,8 @@ export interface SellItems {
     kakaoPayments?: any;
     payment?: payment;
     errors?: any[]
-    type: "guild" | "user";
+    type: targetType;
+    published_date: Date
   }
   
   export interface payment {
@@ -164,3 +165,6 @@ export interface SellItems {
     settlementStatus: string;
     refundStatus: string;
   }
+
+  export type targetType = "guild" | "user"
+  export type paymentsType = "kakaopay" | "tosspayments"

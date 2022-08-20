@@ -1,5 +1,7 @@
 import {
+  IsBoolean,
   IsEmail,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -13,6 +15,20 @@ export class newPayments {
   @IsOptional()
   @IsString({ message: "서버 아이디는 String형식 입니다" })
   guildId: string;
+}
+
+export class methodChange {
+  @IsIn(["kakaopay", "tosspayments"], {
+    message: "올바른 결제 타입을 입력해주세요",
+  })
+  paymentsType: string;
+
+  @IsString({ message: "결제 방식는 String형식 입니다" })
+  method: string;
+}
+export class autopay {
+  @IsBoolean()
+  status: boolean;
 }
 
 export class confirmPayment {

@@ -1,5 +1,7 @@
 import {
+  autopay,
   confirmPayment,
+  methodChange,
   newPayments,
   PaymentsGift,
   PaymentsKakaoPay,
@@ -23,7 +25,11 @@ import type {
   CardMethod,
   Methods,
 } from "@tosspayments/brandpay-types";
-import { Payments, PaymentsMethods } from "@/interfaces/payments.interface";
+import {
+  Payments,
+  PaymentsMethods,
+  targetType,
+} from "@/interfaces/payments.interface";
 import { guildPremiumHanler, premiumGuildCheck } from "@/utils/premium";
 import premiumGuildModel from "@/models/premiumGuild.model";
 import premiumUserModel from "@/models/premiumUser.model";
@@ -32,6 +38,7 @@ import { Request } from "express";
 import { FRONT_REDIRECT_URL } from "@/config";
 import billingsModel from "@/models/billings.model";
 import paymentsTossMethodsModel from "@/models/tossmethods.model";
+import productsModel from "@/models/products.model";
 
 class PaymentsService {
   public async getPayementsAuth(req: RequestWithUser): Promise<any> {
@@ -171,10 +178,13 @@ class PaymentsService {
     if (payments.type === "guild") {
       await guildPremiumHanler(payments.target, payments.item, req.user.id, {
         amount: confirmData.data.totalAmount,
-        method: confirmData.data.method
+        method: confirmData.data.method,
       });
     }
-    const method = await paymentsTossMethodsModel.findOne({userId: req.user.id, methodId})
+    const method = await paymentsTossMethodsModel.findOne({
+      userId: req.user.id,
+      methodId,
+    });
     await this.updateBilling(orderId, req, "tosspayments", method.methodKey);
     return confirmData.data;
   }
@@ -215,7 +225,7 @@ class PaymentsService {
     if (payments.type == "guild") {
       await guildPremiumHanler(payments.target, payments.item, req.user.id, {
         amount: orderCulturelandData.data.totalAmount,
-        method: orderCulturelandData.data.method
+        method: orderCulturelandData.data.method,
       });
     }
     const paymentsMeta = await this.getTossPaymentsMetadata(orderId, req);
@@ -267,7 +277,10 @@ class PaymentsService {
     if (payments.type == "guild") {
       await guildPremiumHanler(payments.target, payments.item, req.user.id, {
         amount: approveKakaopayData.data.amount.total,
-        method: approveKakaopayData.data.payment_method_type === "CARD" ? "카카오페이 카드" : "카카오페이 계좌"
+        method:
+          approveKakaopayData.data.payment_method_type === "CARD"
+            ? "카카오페이 카드"
+            : "카카오페이 계좌",
       });
     }
     await this.updateBilling(
@@ -372,6 +385,100 @@ class PaymentsService {
     return paymentsMeta;
   }
 
+  public async getTargetOrder(req: RequestWithUser): Promise<any> {
+    const payments = await paymentsModel.find({
+      target: req.params.targetId,
+      userId: req.user.id,
+      process: { $in: ["success", "error"] },
+    });
+    if (!payments)
+      throw new HttpException(404, req.t("payments.notFoundPayments"));
+    const paymentsList = Promise.all(
+      payments.map(async (payment) => {
+        if (payment.kakaoPayments)
+          return await this.getKakaoPaymentsMetadata(payment.orderId, req);
+        const paymentsMeta = await this.getTossPaymentsMetadata(
+          payment.orderId,
+          req
+        );
+        return paymentsMeta;
+      })
+    );
+    return paymentsList;
+  }
+
+  public async methodChange(req: RequestWithUser): Promise<any> {
+    const { method, paymentsType } = req.body as methodChange;
+    const billing = await billingsModel.findOne({ _id: req.params.id });
+    if (!billing)
+      throw new HttpException(404, "해당 정기결제는 찾을 수 없습니다");
+    if (paymentsType === "tosspayments") {
+      const tossmethod = await paymentsTossMethodsModel.findOne({
+        userId: req.user.id,
+        methodId: method,
+      });
+      await billing.updateOne({ method: tossmethod.methodKey });
+    } else {
+      throw new HttpException(400, "해당 결제방식은 찾을 수 없습니다");
+    }
+    return null;
+  }
+  public async autopayChange(req: RequestWithUser): Promise<any> {
+    const { status } = req.body as autopay;
+    console.log(status);
+    const billing = await billingsModel.findOne({ _id: req.params.id });
+    if (!billing)
+      throw new HttpException(404, "해당 정기결제는 찾을 수 없습니다");
+    await billing.updateOne({ useing: status });
+    return status;
+  }
+
+  public async getSubscribes(req: RequestWithUser): Promise<any> {
+    const subscribesDB = await billingsModel.find({ userId: req.user.id });
+    const subscribes = await Promise.all(
+      subscribesDB.map(async (subscribe) => {
+        const product = await productsModel.findOne({
+          itemId: subscribe.itemId,
+        });
+        if (subscribe.paymentsType === "tosspayments") {
+          const method = await paymentsTossMethodsModel.findOne({
+            methodKey: subscribe.method,
+          });
+          return {
+            _id: subscribe._id,
+            name: product.itemName,
+            method: method.methodId,
+            paymentsType: subscribe.paymentsType,
+            target: subscribe.target,
+            targetType: subscribe.targetType,
+            useing: subscribe.useing,
+            metadata: await this.getTargetMetadata(
+              subscribe.target,
+              subscribe.targetType
+            ),
+            product: product.toJSON(),
+          };
+        } else if (subscribe.paymentsType === "kakaopay") {
+          return {
+            _id: subscribe._id,
+            name: product.itemName,
+            method: "카카오페이",
+            paymentsType: subscribe.paymentsType,
+            target: subscribe.target,
+            targetType: subscribe.targetType,
+            useing: subscribe.useing,
+            metadata: await this.getTargetMetadata(
+              subscribe.target,
+              subscribe.targetType
+            ),
+            product: product.toJSON(),
+          };
+        }
+      })
+    );
+    return subscribes;
+  }
+
   public async getOrder(req: RequestWithUser): Promise<any> {
     const payments = await paymentsModel.findOne({
       orderId: req.params.orderId,
@@ -446,6 +553,8 @@ class PaymentsService {
       nextPayDate = userPremium.nextpay_date;
     }
     return {
+      createAt: payments.published_date,
+      id: payments.orderId,
       metadata: itemMetadata,
       nextPayDate,
       ...payments.toJSON(),
@@ -488,6 +597,8 @@ class PaymentsService {
       nextPayDate = userPremium.nextpay_date;
     }
     return {
+      createAt: payments.published_date,
+      id: payments.orderId,
       metadata: itemMetadata,
       nextPayDate,
       name: payments.name,
@@ -498,7 +609,7 @@ class PaymentsService {
           payments.kakaoPayments.payment_method_type === "MONEY"
             ? "카카오페이 계좌"
             : "카카오페이 카드",
-        approvedAt: payments.kakaoPayments.approvedAt,
+        approvedAt: payments.kakaoPayments.approved_at,
       },
     };
   }
@@ -528,8 +639,27 @@ class PaymentsService {
     } else {
       await billingsModel.updateOne(
         { target: order.target },
-        { $set: { useing: true } }
+        { $set: { useing: true, type: type, method: method } }
       );
+    }
+  }
+
+  private async getTargetMetadata(id: string, type: targetType) {
+    if (type === "guild") {
+      const guild = client.guilds.cache.get(id);
+      return {
+        name: guild.name,
+        id: guild.id,
+        icon: guild.icon,
+      };
+    } else if (type === "user") {
+      const user = await client.users.fetch(id);
+      return {
+        name: user.username,
+        id: user.id,
+        avatar: user.avatar,
+        discriminator: user.discriminator,
+      };
     }
   }
 }

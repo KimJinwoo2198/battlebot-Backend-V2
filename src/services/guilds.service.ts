@@ -21,7 +21,6 @@ import customLinkSettingModel from "@/models/customLinkSetting.model";
 import verifyModel from "@/models/verify.model";
 import { Automod, DeleteAutomod, DeleteCustomLink } from "@/dtos/guilds.dto";
 import automodModel from "@/models/automod.model";
-import { ObjectId } from "mongodb";
 
 class GuildsService {
   public async getGuildData(req: RequestWithGuild): Promise<any> {

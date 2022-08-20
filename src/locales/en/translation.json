@@ -71,7 +71,7 @@
   },
   "automod": {
     "premiumMax": "You can create up to 15 of them when using Premium.",
-    "noPremiumMax": "Up to 15 can be created.",
+    "noPremiumMax": "Up to 15 can be created."
   },
   "notFoundUser": "User not found.",
   "notNeedParams": "Required parameters not found",

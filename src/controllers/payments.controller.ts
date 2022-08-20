@@ -33,6 +33,15 @@ class PaymentsController {
     }
   };
 
+  public getTargetOrder = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const getTargetOrder = await this.paymentsService.getTargetOrder(req)
+      ResponseWrapper(req, res, {data: getTargetOrder})
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getSuccessOrderCultureland = async(req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const getSuccessOrderCultureland = await this.paymentsService.getSuccessOrderCultureland(req)
@@ -73,6 +82,33 @@ class PaymentsController {
     try {
       const getPaymentsMethods = await this.paymentsService.getPaymentsMethods(req)
       ResponseWrapper(req, res, {data: getPaymentsMethods})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getSubscribes = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const getSubscribes = await this.paymentsService.getSubscribes(req)
+      ResponseWrapper(req, res, {data: getSubscribes})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public payMethodChange = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const methodChange = await this.paymentsService.methodChange(req)
+      ResponseWrapper(req, res, {data: methodChange})
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public payAutopayChange = async(req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const autopayChange = await this.paymentsService.autopayChange(req)
+      ResponseWrapper(req, res, {data: autopayChange})
     } catch (error) {
       next(error);
     }
