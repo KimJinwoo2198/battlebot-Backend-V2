@@ -3,7 +3,7 @@ import { Routes } from '@interfaces/routes.interface';
 import { authAdminMiddleware } from '@middlewares/auth.middleware';
 import GuildController from '@/controllers/guilds.controller';
 import validationMiddleware from '@middlewares/validation.middleware';
-import { Automod, CustomLink, DeleteAutomod, DeleteCustomLink, Ticket, Vote, Warning } from "@dtos/guilds.dto"
+import { Automod, CustomLink, DeleteAutomod, DeleteCustomLink, Ticket, Verify, Vote, Warning } from "@dtos/guilds.dto"
 
 class GuildRoute implements Routes {
   public path = '/guilds';
@@ -29,6 +29,7 @@ class GuildRoute implements Routes {
     this.router.post(`${this.path}/:id/ticket/create`, authAdminMiddleware, validationMiddleware(Ticket, 'body'), this.guildsController.createTicket);
     this.router.post(`${this.path}/:id/members/:userId/warning`, authAdminMiddleware, validationMiddleware(Warning, 'body'), this.guildsController.addGuildMemberWarning);
     this.router.post(`${this.path}/:id/vote`, authAdminMiddleware, validationMiddleware(Vote, 'body'), this.guildsController.guildVote);
+    this.router.post(`${this.path}/:id/verify`, authAdminMiddleware, validationMiddleware(Verify, 'body'), this.guildsController.createVerify);
     this.router.delete(`${this.path}/:id/customlink`, authAdminMiddleware, validationMiddleware(DeleteCustomLink, 'body'), this.guildsController.deleteCustomLink);
     this.router.delete(`${this.path}/:id/automod`, authAdminMiddleware, validationMiddleware(DeleteAutomod, 'body'), this.guildsController.deleteAutomod);
   }

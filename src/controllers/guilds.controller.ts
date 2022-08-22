@@ -188,6 +188,19 @@ class GuildController {
     }
   };
 
+  public createVerify = async (
+    req: RequestWithGuild,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const createVerify = await this.guildsService.createVerify(req);
+      ResponseWrapper(req, res, { message: createVerify });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public addGuildMemberWarning = async (
     req: RequestWithGuild,
     res: Response,

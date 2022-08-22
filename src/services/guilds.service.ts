@@ -19,7 +19,7 @@ import ticketSettingModel from "@/models/ticketSetting.model";
 import { ResponseObj } from "@/interfaces/routes.interface";
 import customLinkSettingModel from "@/models/customLinkSetting.model";
 import verifyModel from "@/models/verify.model";
-import { Automod, DeleteAutomod, DeleteCustomLink } from "@/dtos/guilds.dto";
+import { Automod, DeleteAutomod, DeleteCustomLink, Verify } from "@/dtos/guilds.dto";
 import automodModel from "@/models/automod.model";
 
 class GuildsService {
@@ -252,6 +252,11 @@ class GuildsService {
     return {
       count: deleteCount.deletedCount,
     };
+  }
+
+  public async createVerify(req: RequestWithGuild): Promise<any> {
+    const { } = req.body as Verify
+    return null;
   }
 
   public async createTicket(req: RequestWithGuild): Promise<string> {
